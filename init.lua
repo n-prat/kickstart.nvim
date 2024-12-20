@@ -190,6 +190,18 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+--------------------------------------------------------------------------------
+
+-- will be used to disabled some plugins on Windows (eg treesitter)
+-- https://github.com/neovim/neovim/blob/e1c2179dd93ed2cd787b1cd016606b1901a1acfe/runtime/lua/vim/lsp/protocol.lua#L13C7-L13C15
+-- or even better: https://github.com/neovim/neovim/blob/e1c2179dd93ed2cd787b1cd016606b1901a1acfe/runtime/lua/vim/fs.lua#L17
+-- local sysname = uv.os_uname().sysname:lower()
+-- local iswin = not not (sysname:find('windows') or sysname:find('mingw'))
+-- FAIL b/c can't use local from inside Lazy? TODO understand lua scopes
+-- replaced by jit.os:find("Windows")
+
+--------------------------------------------------------------------------------
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -897,7 +909,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     -- Disabled on windows b/c there we mostly use neovim to edit markdown
     -- Else: "No C compiler found! "cc", "gcc", "clang", "cl", "zig" are not executable."
-    cond = vim.fn.has 'macunix' == 1,
+    cond = not jit.os:find("Windows"),
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
