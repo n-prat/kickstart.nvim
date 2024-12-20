@@ -688,6 +688,15 @@ require('lazy').setup({
     end,
   },
 
+  ------------------------------------------------------------------------------
+  -- pratn use "rustaceanvim" instead of Rust config built into lspconfig
+  {
+    'mrcjkb/rustaceanvim',
+    version = '^5', -- Recommended
+    lazy = false, -- This plugin is already lazy
+  },
+  ------------------------------------------------------------------------------
+
   { -- Autoformat
     'stevearc/conform.nvim',
     event = { 'BufWritePre' },
@@ -909,7 +918,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     -- Disabled on windows b/c there we mostly use neovim to edit markdown
     -- Else: "No C compiler found! "cc", "gcc", "clang", "cl", "zig" are not executable."
-    cond = not jit.os:find("Windows"),
+    cond = not jit.os:find 'Windows',
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
