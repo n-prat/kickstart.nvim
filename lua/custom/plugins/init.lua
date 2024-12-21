@@ -213,7 +213,8 @@ return {
   {
     'nvim-treesitter/nvim-treesitter-textobjects',
     event = 'VeryLazy',
-    enabled = true,
+    -- MUST use same cond than treesitter itself; or could be cleverer about loading cf linked lazyvim config
+    cond = not jit.os:find 'Windows',
     dependencies = { 'nvim-treesitter/nvim-treesitter' },
     config = function()
       require('nvim-treesitter.configs').setup {
