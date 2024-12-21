@@ -196,4 +196,14 @@ return {
       require('telescope').load_extension 'undo'
     end,
   },
+  -------------------------------------------------------------------------------
+  --- https://github.com/nvim-treesitter/nvim-treesitter-context
+  --- Shows which class/function/enum/etc we are inside at the top of the screen
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    config = function()
+      require('treesitter-context').setup()
+    end,
+  },
 }
