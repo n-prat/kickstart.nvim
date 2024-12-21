@@ -125,4 +125,40 @@ return {
       vim.keymap.set('t', '<A-i>', '<C-\\><C-n><CMD>lua require("FTerm").toggle()<CR>')
     end,
   },
+
+  -----------------------------------------------------------------------------
+  --- https://github.com/pocco81/auto-save.nvim
+  {
+    'okuuva/auto-save.nvim',
+    version = '^1.0.0', -- see https://devhints.io/semver, alternatively use '*' to use the latest tagged release
+    cmd = 'ASToggle', -- optional for lazy loading on command
+    event = { 'InsertLeave', 'TextChanged' }, -- optional for lazy loading on trigger events
+    config = function()
+      require('auto-save').setup {
+        -- delay in ms; default is 135 which is a bit extreme
+        debounce_delay = 30000,
+
+        condition = function(buf)
+          -- don't save for special-buffers
+          if vim.fn.getbufvar(buf, '&buftype') ~= '' then
+            return false
+          end
+          return true
+        end,
+      }
+
+      local group = vim.api.nvim_create_augroup('autosave', {})
+
+      vim.api.nvim_create_autocmd('User', {
+        pattern = 'AutoSaveWritePost',
+        group = group,
+        callback = function(opts)
+          if opts.data.saved_buffer ~= nil then
+            local filename = vim.api.nvim_buf_get_name(opts.data.saved_buffer)
+            vim.notify('AutoSave: saved ' .. filename .. ' at ' .. vim.fn.strftime '%H:%M:%S', vim.log.levels.INFO)
+          end
+        end,
+      })
+    end,
+  },
 }
