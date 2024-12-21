@@ -105,4 +105,24 @@ return {
       end)
     end,
   },
+
+  -----------------------------------------------------------------------------
+  --- https://github.com/akinsho/toggleterm.nvim
+  -- DID TRY   'akinsho/toggleterm.nvim but UX is not much better than vanilla terminal
+  {
+    'numToStr/FTerm.nvim',
+    config = function()
+      require('FTerm').setup {
+        border = 'single',
+        ---Close the terminal as soon as shell/command exits.
+        ---Disabling this will mimic the native terminal behaviour.
+        ---@type boolean
+        auto_close = true,
+      }
+
+      -- Example keybindings
+      vim.keymap.set('n', '<A-i>', '<CMD>lua require("FTerm").toggle()<CR>')
+      vim.keymap.set('t', '<A-i>', '<C-\\><C-n><CMD>lua require("FTerm").toggle()<CR>')
+    end,
+  },
 }
