@@ -357,14 +357,31 @@ return {
   -- NOTE require "deno"; can be installed via pacman/etc on Linux, or choco/winget on Windows
   -- WARNING install deno BEFORE else: https://github.com/toppair/peek.nvim/issues/65
   -- (could probably rerun the build task if eg PeekOpen fails)
+  -- FAIL: does not seem to work on Windows or via SSH
+  -- {
+  --   'toppair/peek.nvim',
+  --   event = { 'VeryLazy' },
+  --   build = 'deno task --quiet build:fast',
+  --   config = function()
+  --     require('peek').setup {
+  --       app = 'webview',
+  --     }
+  --     vim.api.nvim_create_user_command('PeekOpen', require('peek').open, {})
+  --     vim.api.nvim_create_user_command('PeekClose', require('peek').close, {})
+  --   end,
+  -- },
+  -- SHOULD probably call `:call mkdp#util#install()` after install
+  --
   {
-    'toppair/peek.nvim',
-    event = { 'VeryLazy' },
-    build = 'deno task --quiet build:fast',
-    config = function()
-      require('peek').setup()
-      vim.api.nvim_create_user_command('PeekOpen', require('peek').open, {})
-      vim.api.nvim_create_user_command('PeekClose', require('peek').close, {})
+    'iamcco/markdown-preview.nvim',
+    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
+    ft = { 'markdown' },
+    build = function()
+      vim.fn['mkdp#util#install']()
+    end,
+    init = function()
+      vim.g.mkdp_open_to_the_world = 1
+      vim.g.mkdp_echo_preview_url = 1
     end,
   },
 }
