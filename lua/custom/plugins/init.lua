@@ -329,4 +329,27 @@ return {
       vim.keymap.set({ 'n', 'x', 'o' }, 'T', ts_repeat_move.builtin_T_expr, { expr = true })
     end,
   },
+  -------------------------------------------------------------------------------
+  --- https://github.com/RRethy/nvim-treesitter-textsubjects
+  --- Basically a simplified textobjects + move
+  {
+    'RRethy/nvim-treesitter-textsubjects',
+    event = 'VeryLazy',
+    -- MUST use same cond than treesitter itself; or could be cleverer about loading cf linked lazyvim config
+    cond = not jit.os:find 'Windows',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    config = function()
+      require('nvim-treesitter.configs').setup {
+        textsubjects = {
+          enable = true,
+          prev_selection = ',', -- (Optional) keymap to select the previous selection
+          keymaps = {
+            ['.'] = 'textsubjects-smart',
+            [';'] = 'textsubjects-container-outer',
+            ['i;'] = { 'textsubjects-container-inner', desc = 'Select inside containers (classes, functions, etc.)' },
+          },
+        },
+      }
+    end,
+  },
 }
