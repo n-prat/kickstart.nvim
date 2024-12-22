@@ -964,7 +964,12 @@ require('lazy').setup({
   --
   -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
-  require 'kickstart.plugins.lint',
+  -- Default config only lint markdown but:
+  -- requires markdownlint which is not available on windows
+  -- must be install manually on linux; opening a md file without it install WILL FAIL
+  -- do we even need to lint markdown
+  -- other languages come with their own linters eg Rust Analyzer etc
+  -- require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
