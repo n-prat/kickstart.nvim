@@ -330,7 +330,6 @@ return {
     end,
   },
   -------------------------------------------------------------------------------
-<<<<<<< Updated upstream
   --- https://github.com/RRethy/nvim-treesitter-textsubjects
   --- Basically a simplified textobjects + move
   {
@@ -351,7 +350,8 @@ return {
           },
         },
       }
-=======
+    end,
+  },
   -- https://github.com/toppair/peek.nvim
   -- Markdown preview:
   -- NOTE require "deno"; can be installed via pacman/etc on Linux, or choco/winget on Windows
@@ -365,7 +365,6 @@ return {
       require('peek').setup()
       vim.api.nvim_create_user_command('PeekOpen', require('peek').open, {})
       vim.api.nvim_create_user_command('PeekClose', require('peek').close, {})
->>>>>>> Stashed changes
     end,
   },
 }
