@@ -6,6 +6,9 @@ return {
     'mrcjkb/rustaceanvim',
     version = '^5', -- Recommended
     lazy = false, -- This plugin is already lazy
+    -- Disabled on windows b/c there we mostly use neovim to edit markdown
+    -- Could work; but requires Rust Analyzer so not that relevant
+    -- cond = not jit.os:find 'Windows',
     config = function(_, opts)
       -- n-prat: commented out if statement
       --if LazyVim.has("mason.nvim") then
@@ -22,7 +25,7 @@ return {
       -- end
       vim.g.rustaceanvim = vim.tbl_deep_extend('keep', vim.g.rustaceanvim or {}, opts or {})
       if vim.fn.executable 'rust-analyzer' == 0 then
-        LazyVim.error('**rust-analyzer** not found in PATH, please install it.\nhttps://rust-analyzer.github.io/', { title = 'rustaceanvim' })
+        vim.api.nvim_err_writeln '**rust-analyzer** not found in PATH, please install it.\n'
       end
     end,
   },
