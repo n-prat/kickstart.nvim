@@ -191,6 +191,11 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 --------------------------------------------------------------------------------
+-- n-prat pratn custom
+
+-- enable spellcheck
+vim.opt.spelllang = 'en_us'
+vim.opt.spell = true
 
 -- will be used to disabled some plugins on Windows (eg treesitter)
 -- https://github.com/neovim/neovim/blob/e1c2179dd93ed2cd787b1cd016606b1901a1acfe/runtime/lua/vim/lsp/protocol.lua#L13C7-L13C15
