@@ -274,6 +274,8 @@ return {
         move = {
           enable = true,
           set_jumps = true, -- whether to set jumps in the jumplist
+          -----------------------------------------------------------
+          --- Official README bindings
           goto_next_start = {
             [']m'] = '@function.outer',
             [']]'] = { query = '@class.outer', desc = 'Next class start' },
@@ -299,6 +301,30 @@ return {
             ['[M'] = '@function.outer',
             ['[]'] = '@class.outer',
           },
+          -----------------------------------------------------------
+          --- LazyVim bindings
+          -- goto_next_start = {
+          --   [']f'] = '@function.outer',
+          --   [']c'] = '@class.outer',
+          --   --
+          --   [']a'] = '@parameter.inner',
+          -- },
+          -- goto_next_end = { --
+          --   [']F'] = '@function.outer',
+          --   [']C'] = '@class.outer',
+          --   [']A'] = '@parameter.inner',
+          -- },
+          -- goto_previous_start = { --
+          --   ['[f'] = '@function.outer',
+          --   ['[c'] = '@class.outer',
+          --   ['[a'] = '@parameter.inner',
+          -- },
+          -- goto_previous_end = { --
+          --   ['[F'] = '@function.outer',
+          --   ['[C'] = '@class.outer',
+          --   ['[A'] = '@parameter.inner',
+          -- },
+          -----------------------------------------------------------
           -- Below will go to either the start or the end, whichever is closer.
           -- Use if you want more granular movements
           -- Make it even more gradual by adding multiple queries and regex.
