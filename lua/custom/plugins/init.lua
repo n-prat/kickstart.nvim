@@ -8,8 +8,11 @@ pcall(require('telescope').load_extension, 'persisted')
 -------------------------------------------------------------------------------
 
 return {
+  -------------------------------------------------------------------------------
   -- https://github.com/olimorris/persisted.nvim
   -- NOTE "By design, the plugin will not autoload a session when any arguments are passed to Neovim" eg `nvim .`
+  -- Why persisted was replaced? cf below
+  -- FAIL Shatur/neovim-session-manager: no way to list all sessions so useless in the end... ALSO issues with harpoon cf github
   {
     'olimorris/persisted.nvim',
     config = function()
@@ -21,6 +24,18 @@ return {
       }
     end,
   },
+
+  -------------------------------------------------------------------------------
+  -------------------------------------------------------------------------------
+  --- Handle cwd change when opening files from another "project"
+  ---https://github.com/notjedi/nvim-rooter.lua
+  --- NOTE this is needed in COMBINATION with eg persisted.nvim
+  --- FAIL does not handle submodules... even when trying with .gitignore in rooter_patterns
+  ---   indeed, it works only when opening a folder which is a subdir of the submodule, which is not good
+  ---
+  ---  TRY2 using telescope-project.nvim
+  ---  FAIL b/c no synergy with persisted
+  ---  TRY3 use ONLY neovim-session-manager instead of persisted, cf above
 
   -----------------------------------------------------------------------------
   --- https://github.com/NeogitOrg/neogit
