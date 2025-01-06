@@ -87,6 +87,8 @@ return {
           :find()
       end
 
+      -- NOTE: he is using DVORAK layout so this is converted to qwerty (on azerty hardware)
+      -- cf remap.lua for the conversion
       vim.keymap.set('n', '<C-e>', function()
         toggle_telescope(harpoon:list())
       end, { desc = 'Open harpoon window' })
@@ -101,21 +103,21 @@ return {
       vim.keymap.set('n', '<C-h>', function()
         harpoon:list():select(1)
       end)
-      vim.keymap.set('n', '<C-t>', function()
+      vim.keymap.set('n', '<C-j>', function()
         harpoon:list():select(2)
       end)
-      vim.keymap.set('n', '<C-n>', function()
+      vim.keymap.set('n', '<C-k>', function()
         harpoon:list():select(3)
       end)
-      vim.keymap.set('n', '<C-s>', function()
+      vim.keymap.set('n', '<C-l>', function()
         harpoon:list():select(4)
       end)
 
       -- Toggle previous & next buffers stored within Harpoon list
-      vim.keymap.set('n', '<C-S-P>', function()
+      vim.keymap.set('n', '<C-L-R>', function()
         harpoon:list():prev()
       end)
-      vim.keymap.set('n', '<C-S-N>', function()
+      vim.keymap.set('n', '<C-L-K>', function()
         harpoon:list():next()
       end)
     end,
