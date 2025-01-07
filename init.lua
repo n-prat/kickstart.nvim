@@ -115,7 +115,32 @@ vim.opt.showmode = false
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
 vim.schedule(function()
-  vim.opt.clipboard = 'unnamedplus'
+  -- vim.opt.clipboard = 'unnamedplus'
+
+  -- https://github.com/wez/wezterm/discussions/5231
+  if os.getenv 'SSH_CLIENT' ~= nil or os.getenv 'SSH_TTY' ~= nil or os.getenv 'WEZTERM_EXECUTABLE' ~= nil then
+    -- Wezterm: for security reasons, pasting is disabled so we just log/notify instead
+    local function my_paste(_)
+      return function(_)
+        local content = vim.fn.getreg '"'
+        -- return vim.split(content, '\n')
+        vim.notify 'Wezterm detected: paste disabled; use CTRL+SHIFT+V or SHIFT+INSERT instead'
+        return {}
+      end
+    end
+
+    vim.g.clipboard = {
+      name = 'OSC 52',
+      copy = {
+        ['+'] = require('vim.ui.clipboard.osc52').copy '+',
+        ['*'] = require('vim.ui.clipboard.osc52').copy '*',
+      },
+      paste = {
+        ['+'] = my_paste '+',
+        ['*'] = my_paste '*',
+      },
+    }
+  end
 end)
 
 -- Enable break indent
