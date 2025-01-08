@@ -432,9 +432,16 @@ return {
   -------------------------------------------------------------------------------
   --- https://github.com/3rd/image.nvim
   --- PREREQ: imagemagick and ideally luarocks
+  --- on windows: winget install ImageMagick.Q16
+  --- NOTE: even with imagemagick on windows we get: https://github.com/3rd/image.nvim/issues/115
   {
     '3rd/image.nvim',
-    opts = {},
+    -- build = false, -- so that it doesn't build the rock https://github.com/3rd/image.nvim/issues/91#issuecomment-2453430239
+    -- Disabled on windows cf NOTE above
+    cond = not jit.os:find 'Windows',
+    opts = {
+      processor = 'magick_rock', -- or 'magick_cli',
+    },
   },
   -------------------------------------------------------------------------------
   --- https://github.com/max397574/better-escape.nvim
