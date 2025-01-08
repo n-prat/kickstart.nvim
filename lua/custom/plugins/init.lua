@@ -395,6 +395,7 @@ return {
       }
     end,
   },
+  ------------------------------------------------------------------------------
   -- https://github.com/toppair/peek.nvim
   -- Markdown preview:
   -- NOTE require "deno"; can be installed via pacman/etc on Linux, or choco/winget on Windows
@@ -413,6 +414,7 @@ return {
   --     vim.api.nvim_create_user_command('PeekClose', require('peek').close, {})
   --   end,
   -- },
+  ------------------------------------------------------------------------------
   -- SHOULD probably call `:call mkdp#util#install()` after install
   --
   {
@@ -426,6 +428,13 @@ return {
       vim.g.mkdp_open_to_the_world = 1
       vim.g.mkdp_echo_preview_url = 1
     end,
+  },
+  -------------------------------------------------------------------------------
+  --- https://github.com/3rd/image.nvim
+  --- PREREQ: imagemagick and ideally luarocks
+  {
+    '3rd/image.nvim',
+    opts = {},
   },
   -------------------------------------------------------------------------------
   --- https://github.com/max397574/better-escape.nvim
