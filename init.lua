@@ -221,6 +221,14 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- enable spellcheck
 vim.opt.spelllang = 'en_us'
 vim.opt.spell = true
+-- SHOULD disable spellcheck in terminal buffers
+-- https://github.com/neovim/neovim/issues/2862
+vim.api.nvim_create_autocmd('TermOpen', {
+  group = vim.api.nvim_create_augroup('nprat-disable-spellcheck-terminal', { clear = true }),
+  callback = function(_)
+    vim.opt_local.spell = false
+  end,
+})
 
 -- will be used to disabled some plugins on Windows (eg treesitter)
 -- https://github.com/neovim/neovim/blob/e1c2179dd93ed2cd787b1cd016606b1901a1acfe/runtime/lua/vim/lsp/protocol.lua#L13C7-L13C15
