@@ -511,4 +511,14 @@ return {
       }
     end,
   },
+
+  -------------------------------------------------------------------------------
+  -------------------------------------------------------------------------------
+  --- NOTE DIY plugins require both:
+  --- - ~~call to require ... at the end of the main init.lua~~ NO!
+  --- - corresponding Lazy setup here
+  {
+    dir = vim.fn.stdpath 'config' .. '/lua/custom/wezterm.nvim/',
+    opts = {},
+  },
 }
