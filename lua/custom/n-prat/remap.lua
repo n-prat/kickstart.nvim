@@ -53,11 +53,13 @@ vim.keymap.set('i', '<C-i>', '<Esc>')
 -- n-prat: already set
 -- vim.keymap.set("n", "<leader>f", vim.lsp.buf.format)
 
--- quick fix navigation
-vim.keymap.set('n', '<C-c>', '<cmd>cnext<CR>zz')
-vim.keymap.set('n', '<C-x>', '<cmd>cprev<CR>zz')
-vim.keymap.set('n', '<leader>c', '<cmd>lnext<CR>zz')
-vim.keymap.set('n', '<leader>x', '<cmd>lprev<CR>zz')
+-- NOTE using h and l would make more sense; but that conflicts with existing eg "git hunk" etc
+-- quick list navigation
+vim.keymap.set('n', '<M-j>', '<cmd>cnext<CR>zz')
+vim.keymap.set('n', '<M-k>', '<cmd>cprev<CR>zz')
+-- location list navigation
+vim.keymap.set('n', '<leader>j', '<cmd>lnext<CR>zz')
+vim.keymap.set('n', '<leader>k', '<cmd>lprev<CR>zz')
 
 -- search and replace current work
 vim.keymap.set('n', '<leader>;', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
