@@ -55,6 +55,35 @@ return {
   },
 
   -----------------------------------------------------------------------------
+  --- LazyGit wrapper
+  --- ALTERNATIVE Neogit: ok-ish but UI sucks, and UX is weird
+  --- ALTERNATIVE fugitive: NOT tried
+  ---
+  --- windows: `winget install lazygit`
+  --- linux: `sudo pacman -Syu lazygit`
+  ---
+  --- NOTE if submodule support is needed: https://github.com/kdheepak/lazygit.nvim?tab=readme-ov-file#telescope-plugin
+  {
+    'kdheepak/lazygit.nvim',
+    lazy = true,
+    cmd = {
+      'LazyGit',
+      'LazyGitConfig',
+      'LazyGitCurrentFile',
+      'LazyGitFilter',
+      'LazyGitFilterCurrentFile',
+    },
+    -- optional for floating window border decoration
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    -- setting the keybinding for LazyGit with 'keys' is recommended in
+    -- order to load the plugin when the command is run for the first time
+    keys = {
+      { '<leader>gg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
+    },
+  },
+  -----------------------------------------------------------------------------
   --- https://github.com/ThePrimeagen/harpoon/tree/harpoon2?tab=readme-ov-file#-installation
   {
     'ThePrimeagen/harpoon',
