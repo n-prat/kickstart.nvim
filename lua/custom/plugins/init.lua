@@ -173,34 +173,47 @@ return {
   },
 
   -----------------------------------------------------------------------------
-  --- https://github.com/pocco81/auto-save.nvim
+  --- https://github.com/pocco81/auto-save.nvim -> good stars and contribs, but last activity 3 years ago
+  --- https://github.com/okuuva/auto-save.nvim -> fork of pocco81
+  --- TODO n-prat: see also basic https://neovim.io/doc/user/options.html#'autowrite' and autowriteall
   {
     'okuuva/auto-save.nvim',
     version = '^1.0.0', -- see https://devhints.io/semver, alternatively use '*' to use the latest tagged release
     cmd = 'ASToggle', -- optional for lazy loading on command
     event = { 'InsertLeave', 'TextChanged' }, -- optional for lazy loading on trigger events
-    config = function()
-      require('auto-save').setup {
-        -- delay in ms; default is 135 which is a bit extreme
-        debounce_delay = 30000,
-
-        condition = function(buf)
-          -- don't save for special-buffers
-          if vim.fn.getbufvar(buf, '&buftype') ~= '' then
-            return false
-          end
-          return true
-        end,
-      }
+    opts = {
+      enabled = true, -- DEFAULT start auto-save when the plugin is loaded (i.e. when your package manager loads it)
+      trigger_events = { -- DEFAULT See :h events
+        immediate_save = { 'BufLeave', 'FocusLost', 'QuitPre', 'VimSuspend' }, -- vim events that trigger an immediate save
+        defer_save = { 'InsertLeave', 'TextChanged', 'TextChangedI' }, -- n-prat: default is InsertLeave and TextChanged, but added TextChangedI to also handle INSERT mode changes
+        cancel_deferred_save = { 'InsertEnter' }, -- vim events that cancel a pending deferred save
+      },
+      condition = function(buf)
+        -- don't save for special-buffers
+        -- n-prat: docs cf https://neovim.io/doc/user/options.html#'buftype'
+        -- a normal buffer is buftype is ""
+        if vim.fn.getbufvar(buf, '&buftype') ~= '' then
+          return false
+        end
+        return true
+      end,
+      -- DEFAULT is 1000 but that is relative to trigger_events!
+      -- n-prat: as we added TextChangedI,we can bump this a lot
+      debounce_delay = 10000,
+    },
+    config = function(_, opts)
+      -- having BOTH opts and config need this!
+      -- cf https://github.com/folke/lazy.nvim/discussions/1652
+      require('auto-save').setup(opts)
 
       local group = vim.api.nvim_create_augroup('autosave', {})
 
       vim.api.nvim_create_autocmd('User', {
         pattern = 'AutoSaveWritePost',
         group = group,
-        callback = function(opts)
-          if opts.data.saved_buffer ~= nil then
-            local filename = vim.api.nvim_buf_get_name(opts.data.saved_buffer)
+        callback = function(opts2)
+          if opts2.data.saved_buffer ~= nil then
+            local filename = vim.api.nvim_buf_get_name(opts2.data.saved_buffer)
             vim.notify('AutoSave: saved ' .. filename .. ' at ' .. vim.fn.strftime '%H:%M:%S', vim.log.levels.INFO)
           end
         end,
