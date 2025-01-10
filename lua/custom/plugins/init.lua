@@ -481,9 +481,6 @@ return {
     -- build = false, -- so that it doesn't build the rock https://github.com/3rd/image.nvim/issues/91#issuecomment-2453430239
     -- Disabled on windows cf NOTE above
     cond = not jit.os:find 'Windows',
-    opts = {
-      processor = 'magick_rock', -- or 'magick_cli',
-    },
   },
   -------------------------------------------------------------------------------
   --- https://github.com/max397574/better-escape.nvim
