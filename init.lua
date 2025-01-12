@@ -953,7 +953,14 @@ require('lazy').setup({
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
+      --
+      -- n-prat: default keybinds conflict with "change N characters"
+      -- https://neovim.io/doc/user/change.html#s
+      -- ie pressing 's' directly delete one char and switch to insert mode
+      -- See: https://github.com/echasnovski/mini.surround/blob/aa5e245829dd12d8ff0c96ef11da28681d6049aa/doc/mini-surround.txt#L572
+      -- Two options: increase timeoutlen [but UX-wise it may not be the best choice], or disable 's' keybind [which is not really usefull anyway in practice]
       require('mini.surround').setup()
+      vim.keymap.set({ 'n', 'x' }, 's', '<Nop>', { desc = 'mini.surround: conflict with s' })
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
