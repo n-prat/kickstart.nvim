@@ -51,14 +51,14 @@ vim.keymap.set('i', '<C-i>', '<Esc>')
 -- n-prat: tmux not set up for now
 -- vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
 -- TODO n-prat: scratch or run?
-vim.keymap.set('n', '<C-s>', ":lua require('FTerm').scratch({ cmd = 'zellij-sessionizer' })<CR>")
+vim.keymap.set('n', '<C-t>', ":lua require('FTerm').scratch({ cmd = 'zellij-sessionizer' })<CR>")
 -- n-prat: already set
 -- vim.keymap.set("n", "<leader>f", vim.lsp.buf.format)
 
 -- NOTE using h and l would make more sense; but that conflicts with existing eg "git hunk" etc
 -- quick list navigation
-vim.keymap.set('n', '<M-j>', '<cmd>cnext<CR>zz')
-vim.keymap.set('n', '<M-k>', '<cmd>cprev<CR>zz')
+vim.keymap.set('n', '<M-n>', '<cmd>cnext<CR>zz')
+vim.keymap.set('n', '<M-p>', '<cmd>cprev<CR>zz')
 -- location list navigation
 vim.keymap.set('n', '<leader>j', '<cmd>lnext<CR>zz')
 vim.keymap.set('n', '<leader>k', '<cmd>lprev<CR>zz')
