@@ -123,25 +123,24 @@ return {
   --    also: running sessionizer in FTerm causes a message "process exited with 0" to be shown when returning
   {
     'folke/snacks.nvim',
+    priority = 1000,
+    lazy = false,
     ---@type snacks.Config
     opts = {
       terminal = {
-        -- your terminal configuration comes here
-        -- or leave it empty to use the default settings
-        -- refer to the configuration section below
-        keys = {
-          -- https://github.com/LazyVim/LazyVim/blob/d1529f650fdd89cb620258bdeca5ed7b558420c7/lua/lazyvim/config/keymaps.lua#L174
-          -- n-prat: want to have it floating, so MUST have a command
-          vim.keymap.set('n', '<leader>ft', function()
-            Snacks.terminal(nil)
-          end, { desc = 'Terminal (cwd)' }),
-        },
-        win = {
-          -- style = 'terminal' -- n-prat: default so not needed?
-          -- apparently that's how Snack.terminal is styled
-          height = 0.3,
-          width = 0.3,
-        },
+        -- win = {
+        --   -- style = 'terminal' -- n-prat: default so not needed?
+        --   -- apparently that's how Snack.terminal is styled
+        --   height = 0.3,
+        --   width = 0.3,
+        -- },
+        -- styles = {
+        --   split = {
+        --     position = 'bottom',
+        --     height = 0.3,
+        --     width = 0.3,
+        --   },
+        -- },
       },
       --- Git and/or LazyGit
       --- ALTERNATIVE Neogit: ok-ish but UI sucks, and UX is weird
@@ -154,20 +153,53 @@ return {
       ---
       --- NOTE if submodule support is needed: https://github.com/kdheepak/lazygit.nvim?tab=readme-ov-file#telescope-plugin
       lazygit = {
+        -- win = {
+        --   -- style = 'lazygit', -- n-prat: default so not needed?
+        --   height = 0.8,
+        --   width = 0.8,
+        -- },
+      },
+      bigfile = {
         --
-        config = {
-          keys = {
-            -- https://github.com/LazyVim/LazyVim/blob/d1529f650fdd89cb620258bdeca5ed7b558420c7/lua/lazyvim/config/keymaps.lua#L150
-            vim.keymap.set('n', '<leader>gg', function()
-              Snacks.lazygit()
-            end, { desc = 'Lazygit (cwd)' }),
-          },
+      },
+      quickfile = {
+        --
+      },
+      notifier = {
+        --
+      },
+      input = {
+        --
+      },
+      -- n-prat not sure if there is a better way to style the Terminal
+      -- WARNING: when changing a style: retest all: Terminal, LazyGit, Sessionizer
+      -- b/c it is easy to mess up all of them b/c the styles seem to share some things
+      styles = {
+        split = {
+          position = 'bottom',
+          height = 0.3,
+          width = 0.3,
         },
-        win = {
-          -- style = 'lazygit', -- n-prat: default so not needed?
-          height = 0.8,
-          width = 0.8,
-        },
+      },
+    },
+    keys = {
+
+      -- https://github.com/LazyVim/LazyVim/blob/d1529f650fdd89cb620258bdeca5ed7b558420c7/lua/lazyvim/config/keymaps.lua#L150
+      {
+        '<leader>gg',
+        function()
+          Snacks.lazygit()
+        end,
+        desc = 'Lazygit',
+      },
+      -- https://github.com/LazyVim/LazyVim/blob/d1529f650fdd89cb620258bdeca5ed7b558420c7/lua/lazyvim/config/keymaps.lua#L174
+      -- n-prat: want to have it floating, so MUST have a command
+      {
+        '<leader>ft',
+        function()
+          Snacks.terminal()
+        end,
+        desc = 'Toggle Terminal',
       },
     },
   },
