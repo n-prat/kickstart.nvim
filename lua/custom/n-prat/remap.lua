@@ -51,7 +51,8 @@ vim.keymap.set('i', '<C-i>', '<Esc>')
 -- n-prat: tmux not set up for now
 -- vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
 -- TODO n-prat: scratch or run?
-vim.keymap.set('n', '<C-t>', ":lua require('FTerm').scratch({ cmd = 'zellij-sessionizer' })<CR>")
+-- vim.keymap.set('n', '<C-t>', ":lua require('snacks.terminal').get('zellij-sessionizer')<CR>")
+vim.keymap.set('n', '<C-t>', ":lua Snacks.terminal.get('zellij-sessionizer')<CR>")
 -- n-prat: already set
 -- vim.keymap.set("n", "<leader>f", vim.lsp.buf.format)
 

@@ -21,6 +21,17 @@ return {
         on_autoload_no_session = function()
           vim.notify 'No existing session to load.'
         end,
+        -- Disable saving Snacks.terminal
+        -- cf https://github.com/folke/snacks.nvim/blob/main/docs/terminal.md#terminal to check the filetype
+        -- - 1: b/c without this after restoring a session, then opening a new terminal: it adds a second one instead of reopening
+        -- - 2: with the keymap to open a terminal, we don't really need to save/restore it; we can just toggle it when needed
+        --    (also we are usually inside a Zellij session so we have proper history etc)
+        should_save = function()
+          if vim.bo.filetype == 'snacks_terminal' then
+            return false
+          end
+          return true
+        end,
       }
     end,
   },
@@ -40,6 +51,7 @@ return {
   -----------------------------------------------------------------------------
   --- https://github.com/NeogitOrg/neogit
   --- ALTERNATIVE: fugitive, but bigger/slower and older?
+  --- TODO remove
   {
     'NeogitOrg/neogit',
     dependencies = {
@@ -58,6 +70,7 @@ return {
   --- LazyGit wrapper
   --- ALTERNATIVE Neogit: ok-ish but UI sucks, and UX is weird
   --- ALTERNATIVE fugitive: NOT tried
+  --- ALTERNATIVE https://github.com/folke/snacks.nvim/blob/main/docs/lazygit.md
   ---
   --- windows: `winget install lazygit`
   --- linux: `sudo pacman -Syu lazygit`
@@ -153,23 +166,32 @@ return {
   },
 
   -----------------------------------------------------------------------------
-  --- https://github.com/akinsho/toggleterm.nvim
+  --- Terminal
   -- DID TRY   'akinsho/toggleterm.nvim but UX is not much better than vanilla terminal
+  --    also: running sessionizer in FTerm causes a message "process exited with 0" to be shown when returning
   {
-    'numToStr/FTerm.nvim',
-    config = function()
-      require('FTerm').setup {
-        border = 'single',
-        ---Close the terminal as soon as shell/command exits.
-        ---Disabling this will mimic the native terminal behaviour.
-        ---@type boolean
-        auto_close = true,
-      }
-
-      -- Example keybindings
-      vim.keymap.set('n', '<A-i>', '<CMD>lua require("FTerm").toggle()<CR>')
-      vim.keymap.set('t', '<A-i>', '<C-\\><C-n><CMD>lua require("FTerm").toggle()<CR>')
-    end,
+    'folke/snacks.nvim',
+    ---@type snacks.Config
+    opts = {
+      terminal = {
+        -- your terminal configuration comes here
+        -- or leave it empty to use the default settings
+        -- refer to the configuration section below
+        keys = {
+          -- https://github.com/LazyVim/LazyVim/blob/d1529f650fdd89cb620258bdeca5ed7b558420c7/lua/lazyvim/config/keymaps.lua#L174
+          -- n-prat: want to have it floating, so MUST have a command
+          vim.keymap.set('n', '<leader>ft', function()
+            Snacks.terminal(nil)
+          end, { desc = 'Terminal (cwd)' }),
+        },
+        win = {
+          -- style = 'terminal' -- n-prat: default so not needed?
+          -- apparently that's how Snack.terminal is styled
+          height = 0.3,
+          width = 0.3,
+        },
+      },
+    },
   },
 
   -----------------------------------------------------------------------------
@@ -457,8 +479,9 @@ return {
   --   end,
   -- },
   ------------------------------------------------------------------------------
+  --- iamcco/markdown-preview.nvim: Ok, but does the preview in a browser (scroll auto, etc), so not that great of a flow
   -- SHOULD probably call `:call mkdp#util#install()` after install
-  --
+  -- TODO try and replace with https://github.com/OXY2DEV/markview.nvim
   {
     'iamcco/markdown-preview.nvim',
     cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },

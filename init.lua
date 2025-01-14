@@ -182,6 +182,17 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- shell:
+-- - Linux: use fish if possible
+-- - Windows: use powershell
+if jit.os:find 'Windows' then
+  vim.o.shell = 'powershell'
+else
+  if vim.fn.executable 'fish' == 1 then
+    vim.o.shell = 'fish'
+  end
+end
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
