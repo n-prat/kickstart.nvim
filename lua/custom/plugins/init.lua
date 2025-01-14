@@ -47,55 +47,7 @@ return {
   ---  TRY2 using telescope-project.nvim
   ---  FAIL b/c no synergy with persisted
   ---  TRY3 use ONLY neovim-session-manager instead of persisted, cf above
-
-  -----------------------------------------------------------------------------
-  --- https://github.com/NeogitOrg/neogit
-  --- ALTERNATIVE: fugitive, but bigger/slower and older?
-  --- TODO remove
-  {
-    'NeogitOrg/neogit',
-    dependencies = {
-      'nvim-lua/plenary.nvim', -- required
-      'sindrets/diffview.nvim', -- optional - Diff integration
-
-      -- Only one of these is needed.
-      'nvim-telescope/telescope.nvim', -- optional
-      -- 'ibhagwan/fzf-lua', -- optional
-      -- 'echasnovski/mini.pick', -- optional
-    },
-    config = true,
-  },
-
-  -----------------------------------------------------------------------------
-  --- LazyGit wrapper
-  --- ALTERNATIVE Neogit: ok-ish but UI sucks, and UX is weird
-  --- ALTERNATIVE fugitive: NOT tried
-  --- ALTERNATIVE https://github.com/folke/snacks.nvim/blob/main/docs/lazygit.md
-  ---
-  --- windows: `winget install lazygit`
-  --- linux: `sudo pacman -Syu lazygit`
-  ---
-  --- NOTE if submodule support is needed: https://github.com/kdheepak/lazygit.nvim?tab=readme-ov-file#telescope-plugin
-  {
-    'kdheepak/lazygit.nvim',
-    lazy = true,
-    cmd = {
-      'LazyGit',
-      'LazyGitConfig',
-      'LazyGitCurrentFile',
-      'LazyGitFilter',
-      'LazyGitFilterCurrentFile',
-    },
-    -- optional for floating window border decoration
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-    },
-    -- setting the keybinding for LazyGit with 'keys' is recommended in
-    -- order to load the plugin when the command is run for the first time
-    keys = {
-      { '<leader>gg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
-    },
-  },
+  --
   -----------------------------------------------------------------------------
   --- https://github.com/ThePrimeagen/harpoon/tree/harpoon2?tab=readme-ov-file#-installation
   {
@@ -189,6 +141,32 @@ return {
           -- apparently that's how Snack.terminal is styled
           height = 0.3,
           width = 0.3,
+        },
+      },
+      --- Git and/or LazyGit
+      --- ALTERNATIVE Neogit: ok-ish but UI sucks, and UX is weird
+      --- ALTERNATIVE fugitive: NOT tried
+      --- ALTERNATIVE kdheepak/lazygit.nvim: Ok, but interactions b/w the floating window for lazygit is Neovim are weird
+      --- CURRENT https://github.com/folke/snacks.nvim/blob/main/docs/lazygit.md
+      ---
+      --- windows: `winget install lazygit`
+      --- linux: `sudo pacman -Syu lazygit`
+      ---
+      --- NOTE if submodule support is needed: https://github.com/kdheepak/lazygit.nvim?tab=readme-ov-file#telescope-plugin
+      lazygit = {
+        --
+        config = {
+          keys = {
+            -- https://github.com/LazyVim/LazyVim/blob/d1529f650fdd89cb620258bdeca5ed7b558420c7/lua/lazyvim/config/keymaps.lua#L150
+            vim.keymap.set('n', '<leader>gg', function()
+              Snacks.lazygit()
+            end, { desc = 'Lazygit (cwd)' }),
+          },
+        },
+        win = {
+          -- style = 'lazygit', -- n-prat: default so not needed?
+          height = 0.8,
+          width = 0.8,
         },
       },
     },
