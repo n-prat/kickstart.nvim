@@ -195,7 +195,9 @@ return {
       -- https://github.com/LazyVim/LazyVim/blob/d1529f650fdd89cb620258bdeca5ed7b558420c7/lua/lazyvim/config/keymaps.lua#L174
       -- n-prat: want to have it floating, so MUST have a command
       {
-        '<leader>ft',
+        -- NOTE: that means CTRL + / NOT _
+        -- cf https://github.com/neovim/neovim/issues/20881 and linked issues
+        '<C-_>',
         function()
           Snacks.terminal()
         end,
