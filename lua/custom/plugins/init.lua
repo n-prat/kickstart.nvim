@@ -27,12 +27,28 @@ return {
         -- - 2: with the keymap to open a terminal, we don't really need to save/restore it; we can just toggle it when needed
         --    (also we are usually inside a Zellij session so we have proper history etc)
         should_save = function()
-          if vim.bo.filetype == 'snacks_terminal' then
-            return false
-          end
+          -- vim.notify('filetype : ' .. vim.inspect(vim.bo.filetype))
+          -- return vim.bo.filetype ~= 'snacks_terminal'
+          -- Above check DOES NOT work; so use PersistedSavePre event instead
+          -- or more precisely: it works, but that essentially make this plugin do nothing;
+          -- which then defaults to Neovim's default behavior, which is saving everything???
           return true
         end,
       }
+
+      -- This work as intended: it DELETEs the buffer when saving
+      -- which is not really what we want...
+      vim.api.nvim_create_autocmd('User', {
+        pattern = 'PersistedSavePre',
+        callback = function()
+          for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            vim.notify('filetype : ' .. vim.inspect(vim.bo[buf].filetype))
+            if vim.bo[buf].filetype == 'snacks_terminal' then
+              vim.api.nvim_buf_delete(buf, { force = true })
+            end
+          end
+        end,
+      })
     end,
   },
 
