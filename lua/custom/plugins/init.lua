@@ -143,20 +143,11 @@ return {
     lazy = false,
     ---@type snacks.Config
     opts = {
-      terminal = {
-        -- win = {
-        --   -- style = 'terminal' -- n-prat: default so not needed?
-        --   -- apparently that's how Snack.terminal is styled
-        --   height = 0.3,
-        --   width = 0.3,
-        -- },
-        -- styles = {
-        --   split = {
-        --     position = 'bottom',
-        --     height = 0.3,
-        --     width = 0.3,
-        --   },
-        -- },
+      bigfile = {
+        --
+      },
+      input = {
+        --
       },
       --- Git and/or LazyGit
       --- ALTERNATIVE Neogit: ok-ish but UI sucks, and UX is weird
@@ -175,17 +166,26 @@ return {
         --   width = 0.8,
         -- },
       },
-      bigfile = {
+      notifier = {
         --
       },
       quickfile = {
         --
       },
-      notifier = {
-        --
-      },
-      input = {
-        --
+      terminal = {
+        -- win = {
+        --   -- style = 'terminal' -- n-prat: default so not needed?
+        --   -- apparently that's how Snack.terminal is styled
+        --   height = 0.3,
+        --   width = 0.3,
+        -- },
+        -- styles = {
+        --   split = {
+        --     position = 'bottom',
+        --     height = 0.3,
+        --     width = 0.3,
+        --   },
+        -- },
       },
       -- n-prat not sure if there is a better way to style the Terminal
       -- WARNING: when changing a style: retest all: Terminal, LazyGit, Sessionizer
