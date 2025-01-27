@@ -151,6 +151,32 @@ return {
       },
       picker = {
         --
+        win = {
+          -- input window
+          input = {
+            keys = {
+              -- DEFAULT below, but that conflicts with Zellij
+              -- ['<a-d>'] = { 'inspect', mode = { 'n', 'i' } },
+              -- ['<a-m>'] = { 'toggle_maximize', mode = { 'i', 'n' } },
+              -- ['<a-p>'] = { 'toggle_preview', mode = { 'i', 'n' } },
+              -- ['<a-w>'] = { 'cycle_win', mode = { 'i', 'n' } },
+              -- ["<c-g>"] = { "toggle_live", mode = { "i", "n" } },
+              -- ['<a-i>'] = { 'toggle_ignored', mode = { 'i', 'n' } },
+              -- ['<a-h>'] = { 'toggle_hidden', mode = { 'i', 'n' } },
+              -- ['<a-f>'] = { 'toggle_follow', mode = { 'i', 'n' } },
+              --
+              -- n-prat:
+              ['<c-a-d>'] = { 'inspect', mode = { 'n', 'i' } },
+              ['<c-a-m>'] = { 'toggle_maximize', mode = { 'i', 'n' } },
+              ['<c-a-p>'] = { 'toggle_preview', mode = { 'i', 'n' } },
+              ['<c-a-w>'] = { 'cycle_win', mode = { 'i', 'n' } },
+              ['<c-a-g>'] = { 'toggle_live', mode = { 'i', 'n' } },
+              ['<c-a-i>'] = { 'toggle_ignored', mode = { 'i', 'n' } },
+              ['<c-H>'] = { 'toggle_hidden', mode = { 'i', 'n' } },
+              ['<c-a-f>'] = { 'toggle_follow', mode = { 'i', 'n' } },
+            },
+          },
+        },
       },
       quickfile = {
         --
