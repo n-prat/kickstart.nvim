@@ -768,6 +768,39 @@ return {
       vim.g.mkdp_echo_preview_url = 1
     end,
   },
+  -- TODO? TRY https://github.com/OXY2DEV/markview.nvim which should sort of be the same than below
+  -- cf https://github.com/MeanderingProgrammer/render-markdown.nvim/issues/271 and other threads on reddit etc
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      'echasnovski/mini.nvim',
+      -- NOTE: this is NOT how the README does it; this comes from https://github.com/MeanderingProgrammer/render-markdown.nvim/issues/310
+      -- {
+      --   'saghen/blink.cmp',
+      --   module = false,
+      --   opts = function(_, opts)
+      --     -- PUSH(opts.sources.default, 'markdown')
+      --     -- cf https://github.com/Saghen/blink.cmp/issues/1015 for how adding sources works
+      --     opts = {
+      --       sources = { default = { 'markdown' } },
+      --       providers = {
+      --         markdown = {
+      --           name = 'RenderMarkdown',
+      --           module = 'render-markdown.integ.blink',
+      --           fallbacks = { 'lsp' },
+      --         },
+      --       },
+      --     }
+      --   end,
+      -- },
+    }, -- if you use the mini.nvim suite
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' }, -- if you use standalone mini plugins
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+    ---@module 'render-markdown'
+    ---@type render.md.UserConfig
+    opts = {},
+  },
   -------------------------------------------------------------------------------
   --- https://github.com/3rd/image.nvim
   --- PREREQ: imagemagick and ideally luarocks
