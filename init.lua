@@ -698,7 +698,17 @@ require('lazy').setup({
       -- See the full "keymap" documentation for information on defining your own keymap.
       -- n-prat: kickststart default is to have '<C-l>' and '<C-h>', but they conflict with Harpoon custom keymap anyway
       -- so let's try the default blink.cmp for now '<Tab>' and '<S-Tab>'
-      keymap = { preset = 'default' },
+      keymap = {
+        preset = 'default',
+
+        -- the default for autocomplete up/down is <C-n>/<C-p>
+        -- but I don't like that b/c this is different than Telescope
+        -- So make it match.
+        ['<C-n>'] = {},
+        ['<C-p>'] = {},
+        ['<C-k>'] = { 'select_prev', 'fallback' },
+        ['<C-j>'] = { 'select_next', 'fallback' },
+      },
 
       appearance = {
         -- Sets the fallback highlight groups to nvim-cmp's highlight groups
