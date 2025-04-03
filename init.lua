@@ -710,6 +710,17 @@ require('lazy').setup({
         ['<C-j>'] = { 'select_next', 'fallback' },
       },
 
+      -- By default it uses different previous/next than the preset above (<C-n>,<C-p>)
+      -- https://cmp.saghen.dev/modes/cmdline
+      cmdline = {
+        keymap = {
+          preset = 'inherit',
+          --   -- recommended, as the default keymap will only show and select the next item
+          --   ['<Tab>'] = { 'show', 'accept' },
+        },
+        completion = { menu = { auto_show = true } },
+      },
+
       appearance = {
         -- Sets the fallback highlight groups to nvim-cmp's highlight groups
         -- Useful for when your theme doesn't support blink.cmp
