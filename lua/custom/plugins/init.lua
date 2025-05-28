@@ -799,7 +799,12 @@ return {
     -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
     ---@module 'render-markdown'
     ---@type render.md.UserConfig
-    opts = {},
+    opts = {
+      preview = {
+        filetypes = { 'markdown', 'codecompanion' },
+        ignore_buftypes = {},
+      },
+    },
   },
   -------------------------------------------------------------------------------
   --- https://github.com/3rd/image.nvim
@@ -880,6 +885,78 @@ return {
       --   If not available, we use `mini` as the fallback
       'rcarriga/nvim-notify',
     },
+  },
+
+  -------------------------------------------------------------------------------
+  --- AI/LLM etc
+  ---
+  --- https://codecompanion.olimorris.dev/installation.html
+  {
+    'olimorris/codecompanion.nvim',
+    opts = {},
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      require('codecompanion').setup {
+        strategies = {
+          chat = {
+            adapter = 'openrouter',
+          },
+          inline = {
+            adapter = 'openrouter',
+          },
+          cmd = {
+            adapter = 'openrouter',
+          },
+        },
+        extensions = {
+          mcphub = {
+            callback = 'mcphub.extensions.codecompanion',
+            opts = {
+              show_result_in_chat = true, -- Show mcp tool results in chat
+              make_vars = true, -- Convert resources to #variables
+              make_slash_commands = true, -- Add prompts as /slash commands
+            },
+          },
+        },
+        -- https://github.com/olimorris/codecompanion.nvim/blob/v15.8.0/lua/codecompanion/adapters/gemini.lua
+        adapters = {
+          openrouter = function()
+            local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY -- Read from environment
+            if not openrouter_api_key then
+              vim.notify('CODECOMPANION_OPENROUTER_API_KEY environment variable not set. codecompanion OpenRouter adapter might not work.', vim.log.levels.WARN)
+            end
+
+            return require('codecompanion.adapters').extend('openai_compatible', {
+              env = {
+                url = 'https://openrouter.ai/api',
+                api_key = openrouter_api_key,
+                chat_url = '/v1/chat/completions',
+              },
+              schema = {
+                model = {
+                  default = 'google/gemini-2.5-flash-preview-05-20',
+                },
+              },
+            })
+          end,
+        },
+      }
+    end,
+  },
+
+  -- https://ravitemer.github.io/mcphub.nvim/installation.html
+  {
+    'ravitemer/mcphub.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    build = 'npm install -g mcp-hub@latest', -- Installs `mcp-hub` node binary globally
+    config = function()
+      require('mcphub').setup()
+    end,
   },
 
   -------------------------------------------------------------------------------
