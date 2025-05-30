@@ -899,6 +899,28 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
+      -- https://github.com/olimorris/codecompanion.nvim/discussions/1013
+      local default_model = 'google/gemini-2.5-flash-preview-05-20'
+      local available_models = {
+        default_model,
+        'deepseek/deepseek-r1-0528:free',
+        'deepseek/deepseek-r1-0528',
+        'deepseek/deepseek-r1-0528-qwen3-8b:free',
+        'deepseek/deepseek-r1-0528-qwen3-8b',
+      }
+      local current_model = default_model
+
+      local function select_model()
+        vim.ui.select(available_models, {
+          prompt = 'Select  Model:',
+        }, function(choice)
+          if choice then
+            current_model = choice
+            vim.notify('Selected model: ' .. current_model)
+          end
+        end)
+      end
+
       require('codecompanion').setup {
         strategies = {
           chat = {
@@ -937,13 +959,19 @@ return {
               },
               schema = {
                 model = {
-                  default = 'google/gemini-2.5-flash-preview-05-20',
+                  default = current_model,
                 },
               },
             })
           end,
         },
       }
+
+      vim.keymap.set({ 'n', 'v' }, '<leader>ak', '<cmd>CodeCompanionActions<cr>', { noremap = true, silent = true })
+      vim.keymap.set({ 'n', 'v' }, '<leader>aa', '<cmd>CodeCompanionChat Toggle<cr>', { noremap = true, silent = true })
+      vim.keymap.set('v', '<leader>an', '<cmd>CodeCompanionChat Add<cr>', { noremap = true, silent = true })
+
+      vim.keymap.set('n', '<leader>as', select_model, { desc = 'Select CodeCompanion Model' })
     end,
   },
 
