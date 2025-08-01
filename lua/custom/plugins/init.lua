@@ -112,7 +112,20 @@ return {
       end)
     end,
   },
-
+  -----------------------------------------------------------------------------
+  --- VCS: jj
+  --- requires https://github.com/Cretezy/lazyjj
+  --- and obviously Jujutsu https://github.com/jj-vcs/jj
+  ---
+  --- NOTE: if the popup flashes and closes immediately, it probably just b/c "Error: No jj repository found in"
+  --- CHECK and try to run `lazyjj` on the command line
+  {
+    'swaits/lazyjj.nvim',
+    dependencies = 'nvim-lua/plenary.nvim',
+    opts = {
+      mapping = '<leader>jj',
+    },
+  },
   -----------------------------------------------------------------------------
   --- Terminal
   -- DID TRY   'akinsho/toggleterm.nvim but UX is not much better than vanilla terminal
@@ -129,7 +142,7 @@ return {
       input = {
         --
       },
-      --- Git and/or LazyGit
+      --- VCS: Git and/or LazyGit
       --- ALTERNATIVE Neogit: ok-ish but UI sucks, and UX is weird
       --- ALTERNATIVE fugitive: NOT tried
       --- ALTERNATIVE kdheepak/lazygit.nvim: Ok, but interactions b/w the floating window for lazygit is Neovim are weird
