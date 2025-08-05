@@ -513,6 +513,122 @@ return {
   },
 
   -----------------------------------------------------------------------------
+  --- NOTE this is the only "auto focus" and switch to INSERT mode that works
+  --- `persist_mode` MUST apparently be false; the rest does not seem to matter?
+  --- cf https://github.com/akinsho/toggleterm.nvim/issues/473
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    opts = {
+      size = 60,
+      -- Automatically close terminals when Neovim exits
+      close_on_exit = true,
+      -- This makes the layout more stable when toggling
+      auto_scroll = false,
+      -- NOTE: start_in_insert is the default, and now that fish behaves
+      -- correctly, this will work as expected.
+      start_in_insert = true,
+      persist_mode = false,
+      -- -- AUTO-ENTER INSERT MODE when opening terminal
+      -- on_open = function(term)
+      --   vim.cmd 'startinsert!'
+      -- end,
+      -- This is the definitive fix for fish shell's vi-mode.
+      -- It runs after the terminal is opened and the shell has initialized.
+      -- on_open = function(term)
+      --   -- We still defer slightly to ensure the channel is ready.
+      --   vim.defer_fn(function()
+      --     -- Send the 'i' character directly to the terminal's pty.
+      --     -- This is the programmatic equivalent of pressing the 'i' key.
+      --     vim.api.nvim_chan_send(term.channel, 'i')
+      --   end, 0)
+      -- end,
+    },
+    config = function(_, opts)
+      require('toggleterm').setup(opts)
+
+      -- Define our custom terminals
+      local Terminal = require('toggleterm.terminal').Terminal
+
+      local terminal_test = Terminal:new {
+        -- A unique name for this terminal
+        id = 1,
+        display_name = 'Test Runner',
+        -- Open as a vertical split on the right
+        direction = 'vertical',
+        -- You could have it run a command on start, e.g., 'cargo watch -x test'
+        -- cmd = "cargo watch -x test",
+        hidden = true, -- Start hidden
+      }
+
+      local terminal_git = Terminal:new {
+        id = 2,
+        display_name = 'Git/jj CLI',
+        -- Open as a horizontal split
+        direction = 'vertical',
+        hidden = true,
+      }
+
+      --- Helper function to open the layout and focus a specific terminal.
+      -- @param target_term table The terminal object to focus (e.g., test_runner)
+      local function open_and_focus(target_term)
+        -- If the target is already open, just focus it.
+        if target_term:is_open() then
+          vim.fn.win_gotoid(target_term.window)
+          -- vim.cmd 'startinsert!'
+          return
+        end
+
+        -- If not open, create the full layout.
+        terminal_test:open()
+        terminal_git:open()
+
+        -- Defer focus until after Neovim has drawn the windows.
+        vim.defer_fn(function()
+          if target_term:is_open() then
+            vim.fn.win_gotoid(target_term.window)
+            -- vim.cmd 'startinsert!'
+          end
+        end, 10) -- A small delay is safer
+      end
+
+      vim.keymap.set('n', '<leader>tt', function()
+        open_and_focus(terminal_test)
+      end, { desc = 'Layout & Focus [T]est' })
+
+      vim.keymap.set('n', '<leader>tg', function()
+        open_and_focus(terminal_git)
+      end, { desc = 'Layout & Focus [G]it' })
+
+      vim.keymap.set('n', '<leader>tq', function()
+        -- NOTE: using `close` here was making the switch to INSERT mode after closing the terminals???
+        terminal_test:toggle()
+        terminal_git:toggle()
+        -- This is the crucial command that forces Neovim back to Normal Mode
+        -- after the terminals have been destroyed.
+        vim.cmd 'stopinsert'
+      end, { desc = '[T]erminal [Q]uit Layout' })
+
+      --   -- Keymaps to send commands (The "wow" factor)
+      --   vim.keymap.set('n', '<leader>tr', function()
+      -- -- Runs 'cargo test' in the Test Runner terminal.
+      -- -- The terminal will open automatically if it's hidden.
+      -- test_runner:send('clear && cargo test', true)
+      --   end, { desc = '[T]est [R]un (all)' })
+      --
+      --   vim.keymap.set('n', '<leader>tf', function()
+      --     -- Runs the test for the current file.
+      --     test_runner:send('clear && cargo test --test ' .. vim.fn.expand '%:t:r', true)
+      --   end, { desc = '[T]est [F]ile' })
+      --
+      --   vim.keymap.set('n', '<leader>gp', function()
+      --     -- Runs 'git push --force' in the Git CLI terminal
+      --     git_cli:send('git push --force', true)
+      --   end, { desc = '[G]it [P]ush --force' })
+    end,
+  },
+
+  -----------------------------------------------------------------------------
   --- https://github.com/pocco81/auto-save.nvim -> good stars and contribs, but last activity 3 years ago
   --- https://github.com/okuuva/auto-save.nvim -> fork of pocco81
   --- TODO n-prat: see also basic https://neovim.io/doc/user/options.html#'autowrite' and autowriteall
