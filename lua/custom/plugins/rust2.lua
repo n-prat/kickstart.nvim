@@ -4,7 +4,7 @@ return {
   -- see also LazyVim config: https://github.com/LazyVim/LazyVim/blob/d0c366e4d861b848bdc710696d5311dca2c6d540/lua/lazyvim/plugins/extras/lang/rust.lua
   {
     'mrcjkb/rustaceanvim',
-    version = '^5', -- Recommended
+    version = '^6', -- Recommended
     lazy = false, -- This plugin is already lazy
     -- Disabled on windows b/c there we mostly use neovim to edit markdown
     -- Could work; but requires Rust Analyzer so not that relevant
