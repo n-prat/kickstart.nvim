@@ -10,19 +10,9 @@ return {
     -- Could work; but requires Rust Analyzer so not that relevant
     -- cond = not jit.os:find 'Windows',
     config = function(_, opts)
-      -- n-prat: commented out if statement
-      --if LazyVim.has("mason.nvim") then
-      local package_path = require('mason-registry').get_package('codelldb'):get_install_path()
-      local codelldb = package_path .. '/extension/adapter/codelldb'
-      local library_path = package_path .. '/extension/lldb/lib/liblldb.dylib'
-      local uname = io.popen('uname'):read '*l'
-      if uname == 'Linux' then
-        library_path = package_path .. '/extension/lldb/lib/liblldb.so'
-      end
-      opts.dap = {
-        adapter = require('rustaceanvim.config').get_codelldb_adapter(codelldb, library_path),
-      }
-      -- end
+      -- NOTE: there is a codelldb DAP config in debug.lua
+      -- According to https://github.com/mrcjkb/rustaceanvim#using-codelldb-for-debugging
+      -- -> if `codelldb` in the PATH [which it SHOULD be when correctly setup with mason] then it will be used
       vim.g.rustaceanvim = vim.tbl_deep_extend('keep', vim.g.rustaceanvim or {}, opts or {})
       if vim.fn.executable 'rust-analyzer' == 0 then
         vim.api.nvim_err_writeln '**rust-analyzer** not found in PATH, please install it.\n'
