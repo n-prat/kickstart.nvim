@@ -1020,66 +1020,109 @@ return {
   --- AI/LLM etc
   ---
   --- https://codecompanion.olimorris.dev/installation.html
+  ---
+  --- CUSTOM[nprak]
+  --- -- === TIER 1: GLOBAL MODEL (Persisted in shada) ===
+  --- -- === TIER 2: SESSION/WORKSPACE MODEL (Persisted in session file) ===
+  ---
+  --- See also: https://github.com/olimorris/codecompanion.nvim/discussions/1013
   {
     'olimorris/codecompanion.nvim',
-    opts = {},
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
-      -- https://github.com/olimorris/codecompanion.nvim/discussions/1013
-      local default_model = 'google/gemini-2.5-flash-preview-05-20'
-      local available_models = {
-        default_model,
-        'deepseek/deepseek-r1-0528:free',
-        'deepseek/deepseek-r1-0528',
-        'deepseek/deepseek-r1-0528-qwen3-8b:free',
-        'deepseek/deepseek-r1-0528-qwen3-8b',
-      }
-      local current_model = default_model
+      -- === TIER 1: GLOBAL MODEL (Persisted in shada) ===
+      local hardcoded_default_model = 'openai/gpt-oss-120b'
+      -- Load persisted global model from shada, or fall back to the hardcoded one
+      local global_model = vim.g.codecompanion_global_model or hardcoded_default_model
 
-      local function select_model()
-        vim.ui.select(available_models, {
-          prompt = 'Select  Model:',
+      -- === TIER 2: SESSION/WORKSPACE MODEL (Persisted in session file) ===
+      -- We declare a global variable for the session override.
+      -- The key is that a session management plugin will save this variable.
+      -- We initialize it to nil to ensure it's clean on startup, before any
+      -- session file is loaded.
+      vim.g.codecompanion_session_model_override = nil
+
+      -- A pre-defined list of common models for convenience
+      local available_models = {
+        'openai/gpt-oss-120b',
+        'openai/gpt-oss-20b',
+      }
+      -- Ensure the global model is in the list for easy re-selection
+      if not vim.tbl_contains(available_models, global_model) then
+        table.insert(available_models, global_model)
+      end
+
+      --- Returns the currently active model, prioritizing the session override.
+      local function get_current_model()
+        -- If the session override variable has been set (by loading a session file
+        -- or by the user action), use it. Otherwise, fall back to the global default.
+        return vim.g.codecompanion_session_model_override or global_model
+      end
+
+      --- Prompts to select a model and sets it on a global variable for session persistence.
+      local function select_and_persist_session_model()
+        -- Add any dynamically set session model to the list if it's not there
+        if vim.g.codecompanion_session_model_override and not vim.tbl_contains(available_models, vim.g.codecompanion_session_model_override) then
+          table.insert(available_models, vim.g.codecompanion_session_model_override)
+        end
+
+        local selection_list = vim.deepcopy(available_models)
+        table.insert(selection_list, 1, '[Clear Override - Use Global: ' .. global_model .. ']')
+
+        vim.ui.select(selection_list, {
+          prompt = 'Select Model for this Session (persisted by session manager):',
         }, function(choice)
-          if choice then
-            current_model = choice
-            vim.notify('Selected model: ' .. current_model)
+          if not choice then
+            return vim.notify('Selection cancelled.', vim.log.levels.WARN)
+          end
+
+          if choice:match '^%[Clear Override' then
+            vim.g.codecompanion_session_model_override = nil -- Clear the override
+            vim.notify('Session override cleared. Using global model: ' .. get_current_model(), vim.log.levels.INFO)
+          else
+            vim.g.codecompanion_session_model_override = choice -- Set the override
+            vim.notify('Session model set to: ' .. get_current_model(), vim.log.levels.INFO)
+          end
+          -- NOTE: Your session plugin will handle saving this change automatically.
+        end)
+      end
+
+      --- Prompts to set a new global default model, persisted in shada.
+      local function set_global_model()
+        -- (This function remains unchanged)
+        vim.ui.input({
+          prompt = 'Enter new GLOBAL default model name:',
+          default = global_model,
+        }, function(input)
+          if input and input ~= '' then
+            global_model = input
+            vim.g.codecompanion_global_model = input
+            if not vim.tbl_contains(available_models, input) then
+              table.insert(available_models, input)
+            end
+            vim.notify('Global default model set to: ' .. input, vim.log.levels.INFO)
+          else
+            vim.notify('Global model change cancelled.', vim.log.levels.WARN)
           end
         end)
       end
 
+      -- Setup CodeCompanion
       require('codecompanion').setup {
         strategies = {
-          chat = {
-            adapter = 'openrouter',
-          },
-          inline = {
-            adapter = 'openrouter',
-          },
-          cmd = {
-            adapter = 'openrouter',
-          },
+          chat = { adapter = 'openrouter' },
+          inline = { adapter = 'openrouter' },
+          cmd = { adapter = 'openrouter' },
         },
-        extensions = {
-          mcphub = {
-            callback = 'mcphub.extensions.codecompanion',
-            opts = {
-              show_result_in_chat = true, -- Show mcp tool results in chat
-              make_vars = true, -- Convert resources to #variables
-              make_slash_commands = true, -- Add prompts as /slash commands
-            },
-          },
-        },
-        -- https://github.com/olimorris/codecompanion.nvim/blob/v15.8.0/lua/codecompanion/adapters/gemini.lua
         adapters = {
           openrouter = function()
-            local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY -- Read from environment
+            local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY
             if not openrouter_api_key then
-              vim.notify('CODECOMPANION_OPENROUTER_API_KEY environment variable not set. codecompanion OpenRouter adapter might not work.', vim.log.levels.WARN)
+              vim.notify('CODECOMPANION_OPENROUTER_API_KEY not set.', vim.log.levels.WARN)
             end
-
             return require('codecompanion.adapters').extend('openai_compatible', {
               env = {
                 url = 'https://openrouter.ai/api',
@@ -1087,20 +1130,18 @@ return {
                 chat_url = '/v1/chat/completions',
               },
               schema = {
-                model = {
-                  default = current_model,
-                },
+                model = { default = get_current_model },
               },
             })
           end,
         },
       }
 
-      vim.keymap.set({ 'n', 'v' }, '<leader>ak', '<cmd>CodeCompanionActions<cr>', { noremap = true, silent = true })
-      vim.keymap.set({ 'n', 'v' }, '<leader>aa', '<cmd>CodeCompanionChat Toggle<cr>', { noremap = true, silent = true })
-      vim.keymap.set('v', '<leader>an', '<cmd>CodeCompanionChat Add<cr>', { noremap = true, silent = true })
-
-      vim.keymap.set('n', '<leader>as', select_model, { desc = 'Select CodeCompanion Model' })
+      -- Keymaps
+      vim.keymap.set({ 'n', 'v' }, '<leader>ak', '<cmd>CodeCompanionActions<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Actions' })
+      vim.keymap.set({ 'n', 'v' }, '<leader>aa', '<cmd>CodeCompanionChat Toggle<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Toggle Chat' })
+      vim.keymap.set('n', '<leader>as', select_and_persist_session_model, { desc = 'CodeCompanion: Set [S]ession Model' })
+      vim.keymap.set('n', '<leader>ag', set_global_model, { desc = 'CodeCompanion: Set [G]lobal Model' })
     end,
   },
 
