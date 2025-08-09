@@ -1298,6 +1298,12 @@ return {
     end,
   },
 
+  ------------------------------------------------------------------------------
+  --- Just try to prevent eg opening Neovim for `git commit` when already inside a Neovim session [terminal]
+  {
+    'brianhuster/unnest.nvim',
+  },
+
   -------------------------------------------------------------------------------
   -------------------------------------------------------------------------------
   --- NOTE DIY plugins require both:
