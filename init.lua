@@ -345,6 +345,53 @@ vim.api.nvim_create_autocmd('QuitPre', {
 })
 
 -------------------------------------------------------------------------------
+--- Try to enforce a MIN (relative) size for all terminals windows
+---
+
+local function enforce_min_terminal_size_context_aware()
+  local min_width = math.floor(vim.o.columns * 0.20)
+  local min_height = math.floor(vim.o.lines * 0.20)
+
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local buftype = vim.api.nvim_get_option_value('buftype', { buf = buf })
+
+      if buftype == 'terminal' then
+        local width = vim.api.nvim_win_get_width(win)
+        local height = vim.api.nvim_win_get_height(win)
+
+        -- Heuristic: If it's taller than it is wide, assume it's a vertical split.
+        -- Really complicated alternatives would be:
+        -- - option 1: winlayout
+        -- - option 2: nvim_win_get_position
+        if height > width then
+          -- For vertical splits, ONLY enforce minimum WIDTH.
+          if width < min_width then
+            vim.notify('(V) terminal too small; force resizing!', vim.log.levels.INFO)
+            vim.api.nvim_win_set_width(win, min_width)
+          end
+        else
+          -- For horizontal splits, ONLY enforce minimum HEIGHT.
+          if height < min_height then
+            vim.notify('(H) terminal too small; force resizing!', vim.log.levels.INFO)
+            vim.api.nvim_win_set_height(win, min_height)
+          end
+        end
+      end
+    end
+  end
+end
+
+vim.api.nvim_create_autocmd('WinResized', {
+  pattern = '*',
+  desc = 'Enforce a minimum size for terminal windows (context-aware)',
+  callback = function()
+    vim.schedule(enforce_min_terminal_size_context_aware)
+  end,
+})
+
+-------------------------------------------------------------------------------
 ---
 -- will be used to disabled some plugins on Windows (eg treesitter)
 -- https://github.com/neovim/neovim/blob/e1c2179dd93ed2cd787b1cd016606b1901a1acfe/runtime/lua/vim/lsp/protocol.lua#L13C7-L13C15
