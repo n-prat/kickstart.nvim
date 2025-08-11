@@ -241,6 +241,111 @@ vim.api.nvim_create_autocmd('TermOpen', {
   end,
 })
 
+-------------------------------------------------------------------------------
+-- Autocmd to close Neovim when the last real window is closed.
+-- ie make `:q` close Neovim if there if it is the last Window and the rest are Terminals
+-- NOTE: `:q` while focused on a terminal SHOULD still close only said terminal
+---
+-- A shared function that inspects all windows and returns counts of different types.
+-- @return table A table with keys for `real`, `terminal`, and `other` window counts.
+--
+local function get_window_counts()
+  local counts = { real = 0, terminal = 0, other = 0 }
+  local windows = vim.api.nvim_list_wins()
+
+  for _, win in ipairs(windows) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local buftype = vim.api.nvim_get_option_value('buftype', { buf = buf })
+
+      if buftype == 'terminal' then
+        counts.terminal = counts.terminal + 1
+      elseif buftype == '' or buftype == 'acwrite' then
+        counts.real = counts.real + 1
+      else
+        counts.other = counts.other + 1
+      end
+    end
+  end
+
+  return counts
+end
+
+vim.api.nvim_create_user_command(
+  -- The name of the command you will run, e.g., :CountWindows
+  'CountWindows',
+
+  -- The function that will be executed
+  function()
+    -- Call the shared function to get the current counts
+    local counts = get_window_counts()
+
+    local message = string.format('Window Counts: Real=%d, Terminals=%d, Other=%d', counts.real, counts.terminal, counts.other)
+    vim.notify(message, vim.log.levels.INFO)
+  end,
+
+  -- Command options
+  {
+    desc = 'Count and log the number of real vs terminal windows',
+  }
+)
+
+---
+-- 2. The autocommand that uses the shared logic to decide whether to quit.
+--
+vim.api.nvim_create_autocmd('QuitPre', {
+  pattern = '*',
+  desc = 'Confirm quitting Neovim when the last real window is closed',
+  callback = function()
+    -- Get info about the CURRENTLY FOCUSED window
+    local current_win = vim.api.nvim_get_current_win()
+    local current_buf = vim.api.nvim_win_get_buf(current_win)
+    local current_buftype = vim.api.nvim_get_option_value('buftype', { buf = current_buf })
+
+    -- CASE 1: We are focused on a terminal window.
+    if current_buftype == 'terminal' then
+      -- Simply close the current window. This will not quit Neovim unless it's the last window.
+      vim.cmd 'close'
+      return
+      -- TODO? We must throw an error to prevent the original :q from continuing
+      -- in the edge case that 'close' doesn't stop it. This makes it fully robust.
+      -- error 'Terminal closed, aborting original quit.'
+    end
+
+    -- Call the shared function to get the current counts
+    local counts = get_window_counts()
+
+    if counts.real == 1 then
+      vim.cmd 'qall'
+
+      -- WARNING we are NOT really able to ask for confirmation b/c the UI and in a weird state
+      -- With the code below: the dialog is show (and pressing `y` works) but pressing `n` just sort of hangs then close everything anyway
+      -- -> In any case, we don't really want to prompt so let's skip that
+      -- The decision logic now uses the clean results from the shared function
+      -- local prompt_message =
+      --   string.format('Quit all including %d terminal(s)? (y/n) [Window state: Real=%d, Other=%d]', counts.terminal, counts.real, counts.other)
+      --
+      -- -- 2. Define the button choices. '&' indicates the hotkey.
+      -- local choices = '&Yes\n&No'
+      --
+      -- -- 3. Use vim.fn.confirm(), which properly blocks and waits for input.
+      -- --    It returns a number (1 for Yes, 2 for No).
+      -- local choice = vim.fn.confirm(prompt_message, choices)
+      --
+      -- if choice == 1 then
+      --   -- User chose "Yes". Quit everything.
+      --   vim.cmd 'qall'
+      -- else
+      --   -- User chose "No" or closed the dialog. Cancel the quit.
+      --   vim.cmd 'echo "Quit cancelled."'
+      --   error 'Quit cancelled by user'
+      -- end
+    end
+  end,
+})
+
+-------------------------------------------------------------------------------
+---
 -- will be used to disabled some plugins on Windows (eg treesitter)
 -- https://github.com/neovim/neovim/blob/e1c2179dd93ed2cd787b1cd016606b1901a1acfe/runtime/lua/vim/lsp/protocol.lua#L13C7-L13C15
 -- or even better: https://github.com/neovim/neovim/blob/e1c2179dd93ed2cd787b1cd016606b1901a1acfe/runtime/lua/vim/fs.lua#L17
