@@ -10,6 +10,8 @@ return {
     lazy = false, -- This plugin is already lazy
     opts = {
       server = {
+        -- cf notes-wiki Rust.md for the rational
+        cmd = { '/usr/bin/rust-analyzer' },
         on_attach = function(_, bufnr)
           vim.keymap.set('n', '<leader>cA', function()
             vim.cmd.RustLsp 'codeAction' -- supports rust-analyzer's grouping
