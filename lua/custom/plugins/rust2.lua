@@ -23,6 +23,9 @@ return {
             end,
             { silent = true, buffer = bufnr, desc = 'rust-analyzer: hover' }
           )
+          vim.keymap.set('n', '<leader>co', function()
+            vim.cmd.RustLsp 'openCargo'
+          end, { silent = true, buffer = bufnr, desc = 'rust-analyzer: [C]ode [O]pen Cargo' })
         end,
         default_settings = {
           -- rust-analyzer language server configuration
