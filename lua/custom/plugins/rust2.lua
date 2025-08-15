@@ -1,19 +1,79 @@
 return {
   ------------------------------------------------------------------------------
   -- pratn use "rustaceanvim" instead of Rust config built into lspconfig
-  -- see also LazyVim config: https://github.com/LazyVim/LazyVim/blob/d0c366e4d861b848bdc710696d5311dca2c6d540/lua/lazyvim/plugins/extras/lang/rust.lua
+  -- see also LazyVim config: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/plugins/extras/lang/rust.lua
+  -- last checked rev: c20c402
   {
     'mrcjkb/rustaceanvim',
     version = '^6', -- Recommended
+    ft = { 'rust' },
     lazy = false, -- This plugin is already lazy
-    -- Disabled on windows b/c there we mostly use neovim to edit markdown
-    -- Could work; but requires Rust Analyzer so not that relevant
-    -- cond = not jit.os:find 'Windows',
+    opts = {
+      server = {
+        on_attach = function(_, bufnr)
+          vim.keymap.set('n', '<leader>cA', function()
+            vim.cmd.RustLsp 'codeAction' -- supports rust-analyzer's grouping
+            -- or vim.lsp.buf.codeAction() if you don't want grouping.
+          end, { silent = true, buffer = bufnr, desc = 'rust-analyzer: [C]ode [A]ction' })
+          vim.keymap.set(
+            'n',
+            'K', -- Override Neovim's built-in hover keymap with rustaceanvim's hover actions
+            function()
+              vim.cmd.RustLsp { 'hover', 'actions' }
+            end,
+            { silent = true, buffer = bufnr, desc = 'rust-analyzer: hover' }
+          )
+        end,
+        default_settings = {
+          -- rust-analyzer language server configuration
+          ['rust-analyzer'] = {
+            cargo = {
+              allFeatures = true,
+              loadOutDirsFromCheck = true,
+              buildScripts = {
+                enable = true,
+              },
+            },
+            -- Add clippy lints for Rust if using rust-analyzer
+            checkOnSave = true,
+            -- Enable diagnostics if using rust-analyzer
+            diagnostics = {
+              enable = true,
+            },
+            procMacro = {
+              enable = true,
+              ignored = {
+                ['async-trait'] = { 'async_trait' },
+                ['napi-derive'] = { 'napi' },
+                ['async-recursion'] = { 'async_recursion' },
+              },
+            },
+            files = {
+              excludeDirs = {
+                '.direnv',
+                '.git',
+                '.github',
+                '.gitlab',
+                'bin',
+                'node_modules',
+                'target',
+                'venv',
+                '.venv',
+              },
+            },
+          },
+        },
+      },
+    },
     config = function(_, opts)
       -- NOTE: there is a codelldb DAP config in debug.lua
       -- According to https://github.com/mrcjkb/rustaceanvim#using-codelldb-for-debugging
       -- -> if `codelldb` in the PATH [which it SHOULD be when correctly setup with mason] then it will be used
       vim.g.rustaceanvim = vim.tbl_deep_extend('keep', vim.g.rustaceanvim or {}, opts or {})
+
+      -- Disabled on windows b/c there we mostly use neovim to edit markdown
+      -- Could work; but requires Rust Analyzer so not that relevant
+      -- cond = not jit.os:find 'Windows',
       if vim.fn.executable 'rust-analyzer' == 0 then
         vim.api.nvim_err_writeln '**rust-analyzer** not found in PATH, please install it.\n'
       end
