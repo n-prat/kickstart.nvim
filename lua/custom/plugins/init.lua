@@ -6,80 +6,80 @@
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
--------------------------------------------------------------------------------
---                SHARED LLM MODEL LOGIC (for codecompanion & avante)
--------------------------------------------------------------------------------
-
--- === TIER 1: GLOBAL MODEL (Persisted in shada) ===
-local hardcoded_default_model = 'openai/gpt-oss-120b'
--- Load persisted global model from shada, or fall back to the hardcoded one
-local global_model = vim.g.codecompanion_global_model or hardcoded_default_model
-
--- === TIER 2: SESSION/WORKSPACE MODEL (Persisted in session file by persisted.nvim) ===
--- We initialize this to nil on startup. persisted.nvim will populate it when it loads a session.
-vim.g.codecompanion_session_model_override = nil
-
--- A pre-defined list of common models for convenience in the UI selector.
-local available_models = {
-  'openai/gpt-oss-120b',
-  'openai/gpt-oss-20b',
-}
--- Ensure the global model is in the list for easy re-selection
-if not vim.tbl_contains(available_models, global_model) then
-  table.insert(available_models, global_model)
-end
-
---- Returns the currently active model, prioritizing the session override.
--- This function is the single source of truth for all LLM plugins.
-local function get_current_llm_model()
-  return vim.g.codecompanion_session_model_override or global_model
-end
-
---- Prompts to select a model and sets it on a global variable for session persistence.
-local function select_and_persist_session_model()
-  -- Add any dynamically set session model to the list if it's not there
-  if vim.g.codecompanion_session_model_override and not vim.tbl_contains(available_models, vim.g.codecompanion_session_model_override) then
-    table.insert(available_models, vim.g.codecompanion_session_model_override)
-  end
-
-  local selection_list = vim.deepcopy(available_models)
-  table.insert(selection_list, 1, '[Clear Override - Use Global: ' .. global_model .. ']')
-
-  vim.ui.select(selection_list, {
-    prompt = 'Select Model for this Session (persisted by session manager):',
-  }, function(choice)
-    if not choice then
-      return vim.notify('Selection cancelled.', vim.log.levels.WARN)
-    end
-
-    if choice:match '^%[Clear Override' then
-      vim.g.codecompanion_session_model_override = nil -- Clear the override
-      vim.notify('Session override cleared. Using global model: ' .. get_current_llm_model(), vim.log.levels.INFO)
-    else
-      vim.g.codecompanion_session_model_override = choice -- Set the override
-      vim.notify('Session model set to: ' .. get_current_llm_model(), vim.log.levels.INFO)
-    end
-  end)
-end
-
---- Prompts to set a new global default model, persisted in shada.
-local function set_global_model()
-  vim.ui.input({
-    prompt = 'Enter new GLOBAL default model name:',
-    default = global_model,
-  }, function(input)
-    if input and input ~= '' then
-      global_model = input
-      vim.g.codecompanion_global_model = input
-      if not vim.tbl_contains(available_models, input) then
-        table.insert(available_models, input)
-      end
-      vim.notify('Global default model set to: ' .. input, vim.log.levels.INFO)
-    else
-      vim.notify('Global model change cancelled.', vim.log.levels.WARN)
-    end
-  end)
-end
+-- -------------------------------------------------------------------------------
+-- --                SHARED LLM MODEL LOGIC (for codecompanion & avante)
+-- -------------------------------------------------------------------------------
+--
+-- -- === TIER 1: GLOBAL MODEL (Persisted in shada) ===
+-- local hardcoded_default_model = 'openai/gpt-oss-120b'
+-- -- Load persisted global model from shada, or fall back to the hardcoded one
+-- local global_model = vim.g.codecompanion_global_model or hardcoded_default_model
+--
+-- -- === TIER 2: SESSION/WORKSPACE MODEL (Persisted in session file by persisted.nvim) ===
+-- -- We initialize this to nil on startup. persisted.nvim will populate it when it loads a session.
+-- vim.g.codecompanion_session_model_override = nil
+--
+-- -- A pre-defined list of common models for convenience in the UI selector.
+-- local available_models = {
+--   'openai/gpt-oss-120b',
+--   'openai/gpt-oss-20b',
+-- }
+-- -- Ensure the global model is in the list for easy re-selection
+-- if not vim.tbl_contains(available_models, global_model) then
+--   table.insert(available_models, global_model)
+-- end
+--
+-- --- Returns the currently active model, prioritizing the session override.
+-- -- This function is the single source of truth for all LLM plugins.
+-- local function get_current_llm_model()
+--   return vim.g.codecompanion_session_model_override or global_model
+-- end
+--
+-- --- Prompts to select a model and sets it on a global variable for session persistence.
+-- local function select_and_persist_session_model()
+--   -- Add any dynamically set session model to the list if it's not there
+--   if vim.g.codecompanion_session_model_override and not vim.tbl_contains(available_models, vim.g.codecompanion_session_model_override) then
+--     table.insert(available_models, vim.g.codecompanion_session_model_override)
+--   end
+--
+--   local selection_list = vim.deepcopy(available_models)
+--   table.insert(selection_list, 1, '[Clear Override - Use Global: ' .. global_model .. ']')
+--
+--   vim.ui.select(selection_list, {
+--     prompt = 'Select Model for this Session (persisted by session manager):',
+--   }, function(choice)
+--     if not choice then
+--       return vim.notify('Selection cancelled.', vim.log.levels.WARN)
+--     end
+--
+--     if choice:match '^%[Clear Override' then
+--       vim.g.codecompanion_session_model_override = nil -- Clear the override
+--       vim.notify('Session override cleared. Using global model: ' .. get_current_llm_model(), vim.log.levels.INFO)
+--     else
+--       vim.g.codecompanion_session_model_override = choice -- Set the override
+--       vim.notify('Session model set to: ' .. get_current_llm_model(), vim.log.levels.INFO)
+--     end
+--   end)
+-- end
+--
+-- --- Prompts to set a new global default model, persisted in shada.
+-- local function set_global_model()
+--   vim.ui.input({
+--     prompt = 'Enter new GLOBAL default model name:',
+--     default = global_model,
+--   }, function(input)
+--     if input and input ~= '' then
+--       global_model = input
+--       vim.g.codecompanion_global_model = input
+--       if not vim.tbl_contains(available_models, input) then
+--         table.insert(available_models, input)
+--       end
+--       vim.notify('Global default model set to: ' .. input, vim.log.levels.INFO)
+--     else
+--       vim.notify('Global model change cancelled.', vim.log.levels.WARN)
+--     end
+--   end)
+-- end
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
@@ -1094,189 +1094,189 @@ return {
     },
   },
 
-  -------------------------------------------------------------------------------
-  --- AI/LLM etc
-  ---
-  --- https://codecompanion.olimorris.dev/installation.html
-  ---
-  --- CUSTOM[nprak]
-  --- -- === TIER 1: GLOBAL MODEL (Persisted in shada) ===
-  --- -- === TIER 2: SESSION/WORKSPACE MODEL (Persisted in session file) ===
-  ---
-  --- See also: https://github.com/olimorris/codecompanion.nvim/discussions/1013
-  {
-    'olimorris/codecompanion.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-treesitter/nvim-treesitter',
-    },
-    config = function()
-      require('codecompanion').setup {
-        strategies = {
-          chat = { adapter = 'openrouter' },
-          inline = { adapter = 'openrouter' },
-          cmd = { adapter = 'openrouter' },
-        },
-        adapters = {
-          openrouter = function()
-            local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY
-            if not openrouter_api_key then
-              vim.notify('CODECOMPANION_OPENROUTER_API_KEY not set for codecompanion.nvim.', vim.log.levels.WARN)
-            end
-            return require('codecompanion.adapters').extend('openai_compatible', {
-              env = {
-                url = 'https://openrouter.ai/api',
-                api_key = openrouter_api_key,
-                chat_url = '/v1/chat/completions',
-              },
-              schema = {
-                model = {
-                  default = get_current_llm_model,
-                },
-              },
-            })
-          end,
-        },
-      }
-
-      -- Keymaps for codecompanion actions and shared model selection
-      vim.keymap.set({ 'n', 'v' }, '<leader>AK', '<cmd>CodeCompanionActions<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Actions' })
-      vim.keymap.set({ 'n', 'v' }, '<leader>AA', '<cmd>CodeCompanionChat Toggle<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Toggle Chat' })
-      -- These now call the shared functions defined at the top
-      vim.keymap.set('n', '<leader>AS', select_and_persist_session_model, { desc = 'LLM: Set [S]ession Model' })
-      vim.keymap.set('n', '<leader>AG', set_global_model, { desc = 'LLM: Set [G]lobal Model' })
-    end,
-  },
+  -- -------------------------------------------------------------------------------
+  -- --- AI/LLM etc
+  -- ---
+  -- --- https://codecompanion.olimorris.dev/installation.html
+  -- ---
+  -- --- CUSTOM[nprak]
+  -- --- -- === TIER 1: GLOBAL MODEL (Persisted in shada) ===
+  -- --- -- === TIER 2: SESSION/WORKSPACE MODEL (Persisted in session file) ===
+  -- ---
+  -- --- See also: https://github.com/olimorris/codecompanion.nvim/discussions/1013
+  -- {
+  --   'olimorris/codecompanion.nvim',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'nvim-treesitter/nvim-treesitter',
+  --   },
+  --   config = function()
+  --     require('codecompanion').setup {
+  --       strategies = {
+  --         chat = { adapter = 'openrouter' },
+  --         inline = { adapter = 'openrouter' },
+  --         cmd = { adapter = 'openrouter' },
+  --       },
+  --       adapters = {
+  --         openrouter = function()
+  --           local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY
+  --           if not openrouter_api_key then
+  --             vim.notify('CODECOMPANION_OPENROUTER_API_KEY not set for codecompanion.nvim.', vim.log.levels.WARN)
+  --           end
+  --           return require('codecompanion.adapters').extend('openai_compatible', {
+  --             env = {
+  --               url = 'https://openrouter.ai/api',
+  --               api_key = openrouter_api_key,
+  --               chat_url = '/v1/chat/completions',
+  --             },
+  --             schema = {
+  --               model = {
+  --                 default = get_current_llm_model,
+  --               },
+  --             },
+  --           })
+  --         end,
+  --       },
+  --     }
+  --
+  --     -- Keymaps for codecompanion actions and shared model selection
+  --     vim.keymap.set({ 'n', 'v' }, '<leader>AK', '<cmd>CodeCompanionActions<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Actions' })
+  --     vim.keymap.set({ 'n', 'v' }, '<leader>AA', '<cmd>CodeCompanionChat Toggle<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Toggle Chat' })
+  --     -- These now call the shared functions defined at the top
+  --     vim.keymap.set('n', '<leader>AS', select_and_persist_session_model, { desc = 'LLM: Set [S]ession Model' })
+  --     vim.keymap.set('n', '<leader>AG', set_global_model, { desc = 'LLM: Set [G]lobal Model' })
+  --   end,
+  -- },
 
   --- Avante (newly added, also uses shared logic)
-  {
-    'yetone/avante.nvim',
-    build = vim.fn.has 'win32' ~= 0 and 'powershell -ExecutionPolicy Bypass -File Build.ps1' or 'make',
-    event = 'VeryLazy',
-    version = false,
-    opts = function()
-      local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY
-      if not openrouter_api_key then
-        vim.notify('CODECOMPANION_OPENROUTER_API_KEY not set for avante.nvim.', vim.log.levels.WARN)
-      end
-
-      return {
-        provider = 'openrouter',
-        providers = {
-          openrouter = {
-            __inherited_from = 'openai',
-            endpoint = 'https://openrouter.ai/api/v1',
-            api_key_name = 'CODECOMPANION_OPENROUTER_API_KEY',
-            timeout = 30000,
-            -- model = get_current_llm_model(), -- SORT of works, but probably not dynamic
-            -- does nothing
-            -- models = {
-            --   list = available_models,
-            -- },
-            -- model = function() -- same as previous
-            --   return get_current_llm_model()
-            -- end,
-            -- models = available_models, -- does nothing
-            -- models_list = available_models, -- does nothing
-            --
-            -- VVV THE DYNAMIC SOLUTION VVV
-            -- 1. REMOVE the top-level 'model' key. We will set it dynamically.
-
-            -- 2. This function is called JUST BEFORE every API request.
-            --    avante merges the result into the JSON body.
-            --    FAIL: E5108: Error executing lua: ...re/nvim/lazy/avante.nvim/lua/avante/providers/openai.lua:522: attempt to index local 'request_body' (a function value)
-            -- extra_request_body = function()
-            --   return {
-            --     model = get_current_llm_model(), -- Call the function here
-            --   }
-            -- end,
-            --
-            -- TRY: https://github.com/yetone/avante.nvim/issues/2557
-            is_env_set = function()
-              return true
-            end,
-          },
-          -- Hide all other providers from model selector
-          copilot = {
-            hide_in_model_selector = true,
-          },
-          -- openai = {
-          --   hide_in_model_selector = true,
-          -- },
-          azure = {
-            hide_in_model_selector = true,
-          },
-          bedrock = {
-            hide_in_model_selector = true,
-          },
-          gemini = {
-            hide_in_model_selector = true,
-          },
-          vertex = {
-            hide_in_model_selector = true,
-          },
-          cohere = {
-            hide_in_model_selector = true,
-          },
-          ollama = {
-            hide_in_model_selector = true,
-          },
-          vertex_claude = {
-            hide_in_model_selector = true,
-          },
-        },
-        file_selector = {
-          provider = 'mini.pick',
-        },
-        -- system_prompt as function ensures LLM always has latest MCP server state
-        -- This is evaluated for every message, even in existing chats
-        system_prompt = function()
-          local hub = require('mcphub').get_hub_instance()
-          return hub and hub:get_active_servers_prompt() or ''
-        end,
-        -- Using function prevents requiring mcphub before it's loaded
-        custom_tools = function()
-          return {
-            require('mcphub.extensions.avante').mcp_tool(),
-          }
-        end,
-      }
-    end,
-    config = function(_, opts)
-      require('avante').setup(opts)
-
-      -- Add keymaps for the shared model selection functions
-      vim.keymap.set('n', '<leader>AS', select_and_persist_session_model, { desc = 'LLM: Set [S]ession Model (Avante)' })
-      vim.keymap.set('n', '<leader>AG', set_global_model, { desc = 'LLM: Set [G]lobal Model (Avante)' })
-    end,
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'MunifTanjim/nui.nvim',
-      'echasnovski/mini.pick',
-      'hrsh7th/nvim-cmp',
-      'ibhagwan/fzf-lua',
-      'stevearc/dressing.nvim',
-      'folke/snacks.nvim',
-      'nvim-tree/nvim-web-devicons',
-      {
-        'HakonHarnes/img-clip.nvim',
-        event = 'VeryLazy',
-        opts = {
-          default = {
-            embed_image_as_base64 = false,
-            prompt_for_file_name = false,
-            drag_and_drop = { insert_mode = true },
-            use_absolute_path = true,
-          },
-        },
-      },
-      {
-        'MeanderingProgrammer/render-markdown.nvim',
-        opts = { file_types = { 'markdown', 'Avante' } },
-        ft = { 'markdown', 'Avante' },
-      },
-    },
-  },
+  -- {
+  --   'yetone/avante.nvim',
+  --   build = vim.fn.has 'win32' ~= 0 and 'powershell -ExecutionPolicy Bypass -File Build.ps1' or 'make',
+  --   event = 'VeryLazy',
+  --   version = false,
+  --   opts = function()
+  --     local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY
+  --     if not openrouter_api_key then
+  --       vim.notify('CODECOMPANION_OPENROUTER_API_KEY not set for avante.nvim.', vim.log.levels.WARN)
+  --     end
+  --
+  --     return {
+  --       provider = 'openrouter',
+  --       providers = {
+  --         openrouter = {
+  --           __inherited_from = 'openai',
+  --           endpoint = 'https://openrouter.ai/api/v1',
+  --           api_key_name = 'CODECOMPANION_OPENROUTER_API_KEY',
+  --           timeout = 30000,
+  --           -- model = get_current_llm_model(), -- SORT of works, but probably not dynamic
+  --           -- does nothing
+  --           -- models = {
+  --           --   list = available_models,
+  --           -- },
+  --           -- model = function() -- same as previous
+  --           --   return get_current_llm_model()
+  --           -- end,
+  --           -- models = available_models, -- does nothing
+  --           -- models_list = available_models, -- does nothing
+  --           --
+  --           -- VVV THE DYNAMIC SOLUTION VVV
+  --           -- 1. REMOVE the top-level 'model' key. We will set it dynamically.
+  --
+  --           -- 2. This function is called JUST BEFORE every API request.
+  --           --    avante merges the result into the JSON body.
+  --           --    FAIL: E5108: Error executing lua: ...re/nvim/lazy/avante.nvim/lua/avante/providers/openai.lua:522: attempt to index local 'request_body' (a function value)
+  --           -- extra_request_body = function()
+  --           --   return {
+  --           --     model = get_current_llm_model(), -- Call the function here
+  --           --   }
+  --           -- end,
+  --           --
+  --           -- TRY: https://github.com/yetone/avante.nvim/issues/2557
+  --           is_env_set = function()
+  --             return true
+  --           end,
+  --         },
+  --         -- Hide all other providers from model selector
+  --         copilot = {
+  --           hide_in_model_selector = true,
+  --         },
+  --         -- openai = {
+  --         --   hide_in_model_selector = true,
+  --         -- },
+  --         azure = {
+  --           hide_in_model_selector = true,
+  --         },
+  --         bedrock = {
+  --           hide_in_model_selector = true,
+  --         },
+  --         gemini = {
+  --           hide_in_model_selector = true,
+  --         },
+  --         vertex = {
+  --           hide_in_model_selector = true,
+  --         },
+  --         cohere = {
+  --           hide_in_model_selector = true,
+  --         },
+  --         ollama = {
+  --           hide_in_model_selector = true,
+  --         },
+  --         vertex_claude = {
+  --           hide_in_model_selector = true,
+  --         },
+  --       },
+  --       file_selector = {
+  --         provider = 'mini.pick',
+  --       },
+  --       -- system_prompt as function ensures LLM always has latest MCP server state
+  --       -- This is evaluated for every message, even in existing chats
+  --       system_prompt = function()
+  --         local hub = require('mcphub').get_hub_instance()
+  --         return hub and hub:get_active_servers_prompt() or ''
+  --       end,
+  --       -- Using function prevents requiring mcphub before it's loaded
+  --       custom_tools = function()
+  --         return {
+  --           require('mcphub.extensions.avante').mcp_tool(),
+  --         }
+  --       end,
+  --     }
+  --   end,
+  --   config = function(_, opts)
+  --     require('avante').setup(opts)
+  --
+  --     -- Add keymaps for the shared model selection functions
+  --     vim.keymap.set('n', '<leader>AS', select_and_persist_session_model, { desc = 'LLM: Set [S]ession Model (Avante)' })
+  --     vim.keymap.set('n', '<leader>AG', set_global_model, { desc = 'LLM: Set [G]lobal Model (Avante)' })
+  --   end,
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'MunifTanjim/nui.nvim',
+  --     'echasnovski/mini.pick',
+  --     'hrsh7th/nvim-cmp',
+  --     'ibhagwan/fzf-lua',
+  --     'stevearc/dressing.nvim',
+  --     'folke/snacks.nvim',
+  --     'nvim-tree/nvim-web-devicons',
+  --     {
+  --       'HakonHarnes/img-clip.nvim',
+  --       event = 'VeryLazy',
+  --       opts = {
+  --         default = {
+  --           embed_image_as_base64 = false,
+  --           prompt_for_file_name = false,
+  --           drag_and_drop = { insert_mode = true },
+  --           use_absolute_path = true,
+  --         },
+  --       },
+  --     },
+  --     {
+  --       'MeanderingProgrammer/render-markdown.nvim',
+  --       opts = { file_types = { 'markdown', 'Avante' } },
+  --       ft = { 'markdown', 'Avante' },
+  --     },
+  --   },
+  -- },
 
   -- https://ravitemer.github.io/mcphub.nvim/installation.html
   {
