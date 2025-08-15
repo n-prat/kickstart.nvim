@@ -1102,6 +1102,15 @@ return {
   -- --- CUSTOM[nprak]
   -- --- -- === TIER 1: GLOBAL MODEL (Persisted in shada) ===
   -- --- -- === TIER 2: SESSION/WORKSPACE MODEL (Persisted in session file) ===
+  --
+  -- NOTE[2025-08-15] still not clear what purpose they all have...
+  -- Comparing eg:
+  -- - opencode + mphub + opencode.nvim
+  -- - VS opencode + opencode.vim
+  -- - VS opencode + mcphub
+  -- - VS opencode directly eg a Neovim tab
+  -- - ???
+  --
   -- ---
   -- --- See also: https://github.com/olimorris/codecompanion.nvim/discussions/1013
   -- {
@@ -1279,24 +1288,26 @@ return {
   -- },
 
   -- https://ravitemer.github.io/mcphub.nvim/installation.html
-  {
-    'ravitemer/mcphub.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-    },
-    build = 'npm install -g mcp-hub@latest', -- Installs `mcp-hub` node binary globally
-    config = function()
-      require('mcphub').setup {
-        extensions = {
-          avante = {
-            make_slash_commands = true, -- make /slash commands from MCP server prompts
-          },
-        },
-        -- This sets vim.g.mcphub_auto_approve to true by default (can also be toggled from the HUB UI with `ga`)
-        auto_approve = true,
-      }
-    end,
-  },
+  -- ALTERNATIVE? https://github.com/bigcodegen/mcp-neovim-server
+  --
+  -- {
+  --   'ravitemer/mcphub.nvim',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --   },
+  --   build = 'npm install -g mcp-hub@latest', -- Installs `mcp-hub` node binary globally
+  --   config = function()
+  --     require('mcphub').setup {
+  --       extensions = {
+  --         avante = {
+  --           make_slash_commands = true, -- make /slash commands from MCP server prompts
+  --         },
+  --       },
+  --       -- This sets vim.g.mcphub_auto_approve to true by default (can also be toggled from the HUB UI with `ga`)
+  --       auto_approve = true,
+  --     }
+  --   end,
+  -- },
 
   ------------------------------------------------------------------------------
   --- Just try to prevent eg opening Neovim for `git commit` when already inside a Neovim session [terminal]
