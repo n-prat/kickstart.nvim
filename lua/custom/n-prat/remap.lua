@@ -69,6 +69,37 @@ vim.keymap.set('n', '<leader>;', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><
 -- make current file executable
 vim.keymap.set('n', '<leader>b', '<cmd>!chmod +x %<CR>', { silent = true })
 
+-- `clear` in a terminal only clear the screen, but can still scrollback the history which is
+-- pretty much useless in practice
+-- Let's add a keybind to really clear the scrollback
+-- https://github.com/neovim/neovim/pull/18832
+vim.keymap.set('n', '<leader><C-l>', function()
+  -- 1. Get and store the current value of 'scrollback'.
+  local old_scrollback = vim.opt.scrollback:get()
+
+  -- 2. Set scrollback to a low value to clear the buffer.
+  vim.opt.scrollback = 1
+
+  -- 3. Send the "clear screen" command (Ctrl-L) to the terminal.
+  --    `nvim_replace_termcodes` is used to get the raw terminal code for <C-l>.
+  --    The `true, true, true` arguments are standard for this use case.
+  -- vim.api.nvim_chan_send(vim.b.tui_chan_id, vim.api.nvim_replace_termcodes('<C-l>', true, true, true))
+  -- TODO fix, this still does not clear
+  -- vim.fn.feedkeys('^L', 'n')
+
+  -- 3. IMPORTANT: Schedule the restoration to happen on the next event loop tick.
+  --    This gives the UI time to process the change and actually clear the buffer
+  --    before we immediately set it back.
+  vim.schedule(function()
+    vim.opt.scrollback = old_scrollback
+    -- Optional: a quiet notification to confirm it worked.
+    vim.notify('Scrollback cleared and restored to ' .. old_scrollback, vim.log.levels.INFO, { transient = true })
+  end)
+end, {
+  desc = 'Clear terminal scrollback and restore limit',
+  silent = true,
+})
+
 -- various macro for TypeScript?
 -- vim.keymap.set('n', '<leader>ee', 'oif err != nil {<CR>}<Esc>Oreturn err<Esc>')
 -- vim.keymap.set('n', '<leader>ea', 'oassert.NoError(err, "")<Esc>F";a')
