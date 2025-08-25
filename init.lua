@@ -241,6 +241,16 @@ vim.api.nvim_create_autocmd('TermOpen', {
   end,
 })
 
+-- https://old.reddit.com/r/neovim/comments/1myfvla/does_anyone_know_a_good_diff_view_library/nad22ts/
+-- see also the parent for more context, and the linked GH issue: https://github.com/neovim/neovim/issues/35449
+if vim.fn.has 'nvim-0.12' == 1 then
+  vim.o.diffopt = 'internal,filler,closeoff,inline:word,linematch:40'
+elseif vim.fn.has 'nvim-0.11' == 1 then
+  vim.o.diffopt = 'internal,filler,closeoff,linematch:40'
+else
+  vim.notify('nprak: unsupported Neovim diffopt', vim.log.levels.INFO)
+end
+
 -------------------------------------------------------------------------------
 -- Autocmd to close Neovim when the last real window is closed.
 -- ie make `:q` close Neovim if there if it is the last Window and the rest are Terminals
