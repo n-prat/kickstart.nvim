@@ -115,12 +115,13 @@ return {
 
       -- This work as intended: it DELETEs the buffer when saving
       -- which is not really what we want...
+      -- TODO See also `QuitPre`??? Doing both seems redundant
       vim.api.nvim_create_autocmd('User', {
         pattern = 'PersistedSavePre',
         callback = function()
           for _, buf in ipairs(vim.api.nvim_list_bufs()) do
             vim.notify('filetype : ' .. vim.inspect(vim.bo[buf].filetype))
-            if vim.bo[buf].filetype == 'snacks_terminal' then
+            if vim.bo[buf].filetype == 'snacks_terminal' or vim.bo[buf].filetype == 'terminal' then
               vim.api.nvim_buf_delete(buf, { force = true })
             end
           end
