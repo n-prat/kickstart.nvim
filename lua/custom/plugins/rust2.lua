@@ -12,6 +12,9 @@ return {
       server = {
         -- cf notes-wiki Rust.md for the rational
         cmd = { '/usr/bin/rust-analyzer' },
+        auto_attach = function(bufnr)
+          return not vim.g.rustacean_disabled
+        end,
         on_attach = function(_, bufnr)
           vim.keymap.set('n', '<leader>cA', function()
             vim.cmd.RustLsp 'codeAction' -- supports rust-analyzer's grouping
@@ -28,6 +31,18 @@ return {
           vim.keymap.set('n', '<leader>co', function()
             vim.cmd.RustLsp 'openCargo'
           end, { silent = true, buffer = bufnr, desc = 'rust-analyzer: [C]ode [O]pen Cargo' })
+
+          -- pratn custom: add a command to temp disable `rust-analyzer` etc
+          vim.api.nvim_create_user_command('RustAnalyzerDisableProject', function()
+            -- Stop current rust-analyzer clients
+            for _, client in ipairs(vim.lsp.get_clients { name = 'rust-analyzer' }) do
+              client.stop()
+            end
+
+            -- Set global disable flag
+            vim.g.rustacean_disabled = true
+            vim.notify('rust-analyzer disabled. Restart with `RustAnalyzer start` to re-enable.', vim.log.levels.INFO)
+          end, { desc = 'Disable rust-analyzer for current project' })
         end,
         default_settings = {
           -- rust-analyzer language server configuration
