@@ -4,4 +4,4 @@ test.sh
 nvim
 
 spell/
-lazy-lock.json
+# lazy-lock.json # NO! we want that under VCS b/c used on different machines
