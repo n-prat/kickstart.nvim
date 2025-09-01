@@ -243,13 +243,29 @@ vim.api.nvim_create_autocmd('TermOpen', {
 
 -- https://old.reddit.com/r/neovim/comments/1myfvla/does_anyone_know_a_good_diff_view_library/nad22ts/
 -- see also the parent for more context, and the linked GH issue: https://github.com/neovim/neovim/issues/35449
+-- more specifically: https://old.reddit.com/r/neovim/comments/1myfvla/does_anyone_know_a_good_diff_view_library/nao8knr/
+--
+-- Basically:
+-- - use the linked default
+-- - add `inline:char` just for Neovim 0.12 b/c not available for 0.11
+-- - make `linematch:40` toggleable with a keybind
+vim.o.diffopt = 'internal,filler,closeoff,algorithm:patience,indent-heuristic'
+
 if vim.fn.has 'nvim-0.12' == 1 then
-  vim.o.diffopt = 'internal,filler,closeoff,inline:word,linematch:40'
-elseif vim.fn.has 'nvim-0.11' == 1 then
-  vim.o.diffopt = 'internal,filler,closeoff,linematch:40'
-else
-  vim.notify('nprak: unsupported Neovim diffopt', vim.log.levels.INFO)
+  vim.opt.diffopt:append 'inline:char'
 end
+
+vim.keymap.set('n', '<leader>gtl', function()
+  local linematch = vim.o.diffopt:match '(linematch:%d+)'
+  if linematch then
+    vim.opt.diffopt:remove(linematch)
+    vim.notify(linematch .. ' removed')
+  else
+    linematch = 'linematch:40'
+    vim.opt.diffopt:append(linematch)
+    vim.notify(linematch .. ' added')
+  end
+end, { desc = 'Toggle linematch' })
 
 -------------------------------------------------------------------------------
 -- Autocmd to close Neovim when the last real window is closed.
