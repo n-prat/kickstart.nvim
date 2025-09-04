@@ -53,6 +53,13 @@ return {
               buildScripts = {
                 enable = true,
               },
+              -- Use a different folder for `cargo check`; avoids eg "format on save"(which triggers `cargo check`)
+              -- blocking a terminal started `cargo test` etc
+              -- NOTE: downside is it will increase the size of `target/` b/c of duplication...
+              --
+              -- https://github.com/rust-lang/rust-analyzer/issues/4616
+              -- https://rust-analyzer.github.io/book/configuration#cargo.targetDir
+              targetDir = true,
             },
             -- Add clippy lints for Rust if using rust-analyzer
             checkOnSave = true,
