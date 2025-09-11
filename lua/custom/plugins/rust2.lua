@@ -5,13 +5,16 @@ return {
   -- last checked rev: c20c402
   {
     'mrcjkb/rustaceanvim',
+    -- TEMP? test if the default lsp `rust-analyzer` hangs less; cf config lspconfig below
+    enabled = false,
     version = '^6', -- Recommended
     ft = { 'rust' },
     lazy = false, -- This plugin is already lazy
     opts = {
       server = {
         -- cf notes-wiki Rust.md for the rational
-        cmd = { '/usr/bin/rust-analyzer' },
+        -- cmd = { '/usr/bin/rust-analyzer' },
+        -- NOT NEEDED? `mason` is handling `rust-analyzer` so it should not be coupled to the `rust-toolchain.toml`
         auto_attach = function(bufnr)
           return not vim.g.rustacean_disabled
         end,
@@ -107,89 +110,135 @@ return {
     end,
   },
 
-  -- cf LazyVim config
+  -- =============================================================================
+  -- PLUGIN 1: CONFIGURE rust-analyzer via a mason-lspconfig handler
+  -- This is the modern, correct way to do it. It ensures only one client
+  -- is started with the correct settings. Mason will manage the executable.
+  -- WARNING: DO NOT config it via 'neovim/nvim-lspconfig' directly b/c that ends up starting 2 instances
+  -- =============================================================================
   {
-    'nvim-neotest/neotest',
-    dependencies = {
-      'nvim-neotest/nvim-nio',
-      'nvim-lua/plenary.nvim',
-      'antoinemadec/FixCursorHold.nvim',
-      'nvim-treesitter/nvim-treesitter',
-    },
-    config = function()
-      require('neotest').setup {
-        adapters = {
-          require 'rustaceanvim.neotest',
-        },
-      }
-    end,
-    -- Use LazyVim keybinds b/c why not
-    -- https://github.com/LazyVim/LazyVim/blob/d0c366e4d861b848bdc710696d5311dca2c6d540/lua/lazyvim/plugins/extras/test/core.lua#L107
-    keys = {
-      { '<leader>t', '', desc = '+test' },
-      {
-        '<leader>tt',
-        function()
-          require('neotest').run.run(vim.fn.expand '%')
+    'williamboman/mason-lspconfig.nvim',
+    opts = {
+      handlers = {
+        -- This function will be called for `rust_analyzer` INSTEAD OF the generic one from init.lua.
+        -- This resolves the "two clients" problem permanently.
+        rust_analyzer = function()
+          require('lspconfig').rust_analyzer.setup {
+            -- cf notes-wiki Rust.md for the rational
+            -- cmd = { '/usr/bin/rust-analyzer' },
+            -- NOT NEEDED? `mason` is handling `rust-analyzer` so it should not be coupled to the `rust-toolchain.toml`
+
+            on_attach = function(client, bufnr)
+              vim.keymap.set('n', '<leader>cA', vim.lsp.buf.code_action, { silent = true, buffer = bufnr, desc = 'LSP: [C]ode [A]ction' })
+            end,
+
+            -- Your specific settings for rust-analyzer. These will now be correctly applied.
+            settings = {
+              ['rust-analyzer'] = {
+                cargo = {
+                  allFeatures = false,
+                  features = { 'std' },
+                  loadOutDirsFromCheck = true,
+                  buildScripts = { enable = true },
+                  targetDir = true,
+                },
+                checkOnSave = true,
+                diagnostics = { enable = true },
+                procMacro = { enable = true },
+              },
+            },
+
+            -- This ensures completion capabilities are set up correctly.
+            capabilities = require('blink.cmp').get_lsp_capabilities(),
+          }
         end,
-        desc = 'Run File (Neotest)',
-      },
-      {
-        '<leader>tT',
-        function()
-          require('neotest').run.run(vim.uv.cwd())
-        end,
-        desc = 'Run All Test Files (Neotest)',
-      },
-      {
-        '<leader>tr',
-        function()
-          require('neotest').run.run()
-        end,
-        desc = 'Run Nearest (Neotest)',
-      },
-      {
-        '<leader>tl',
-        function()
-          require('neotest').run.run_last()
-        end,
-        desc = 'Run Last (Neotest)',
-      },
-      {
-        '<leader>ts',
-        function()
-          require('neotest').summary.toggle()
-        end,
-        desc = 'Toggle Summary (Neotest)',
-      },
-      {
-        '<leader>to',
-        function()
-          require('neotest').output.open { enter = true, auto_close = true }
-        end,
-        desc = 'Show Output (Neotest)',
-      },
-      {
-        '<leader>tO',
-        function()
-          require('neotest').output_panel.toggle()
-        end,
-        desc = 'Toggle Output Panel (Neotest)',
-      },
-      {
-        '<leader>tS',
-        function()
-          require('neotest').run.stop()
-        end,
-        desc = 'Stop (Neotest)',
-      },
-      {
-        '<leader>tw',
-        function()
-          require('neotest').watch.toggle(vim.fn.expand '%')
-        end,
-        desc = 'Toggle Watch (Neotest)',
       },
     },
   },
+
+  -- -- cf LazyVim config
+  -- {
+  --   'nvim-neotest/neotest',
+  --   dependencies = {
+  --     'nvim-neotest/nvim-nio',
+  --     'nvim-lua/plenary.nvim',
+  --     'antoinemadec/FixCursorHold.nvim',
+  --     'nvim-treesitter/nvim-treesitter',
+  --   },
+  --   config = function()
+  --     require('neotest').setup {
+  --       adapters = {
+  --         require 'rustaceanvim.neotest',
+  --       },
+  --     }
+  --   end,
+  --   -- Use LazyVim keybinds b/c why not
+  --   -- https://github.com/LazyVim/LazyVim/blob/d0c366e4d861b848bdc710696d5311dca2c6d540/lua/lazyvim/plugins/extras/test/core.lua#L107
+  --   keys = {
+  --     { '<leader>t', '', desc = '+test' },
+  --     {
+  --       '<leader>tt',
+  --       function()
+  --         require('neotest').run.run(vim.fn.expand '%')
+  --       end,
+  --       desc = 'Run File (Neotest)',
+  --     },
+  --     {
+  --       '<leader>tT',
+  --       function()
+  --         require('neotest').run.run(vim.uv.cwd())
+  --       end,
+  --       desc = 'Run All Test Files (Neotest)',
+  --     },
+  --     {
+  --       '<leader>tr',
+  --       function()
+  --         require('neotest').run.run()
+  --       end,
+  --       desc = 'Run Nearest (Neotest)',
+  --     },
+  --     {
+  --       '<leader>tl',
+  --       function()
+  --         require('neotest').run.run_last()
+  --       end,
+  --       desc = 'Run Last (Neotest)',
+  --     },
+  --     {
+  --       '<leader>ts',
+  --       function()
+  --         require('neotest').summary.toggle()
+  --       end,
+  --       desc = 'Toggle Summary (Neotest)',
+  --     },
+  --     {
+  --       '<leader>to',
+  --       function()
+  --         require('neotest').output.open { enter = true, auto_close = true }
+  --       end,
+  --       desc = 'Show Output (Neotest)',
+  --     },
+  --     {
+  --       '<leader>tO',
+  --       function()
+  --         require('neotest').output_panel.toggle()
+  --       end,
+  --       desc = 'Toggle Output Panel (Neotest)',
+  --     },
+  --     {
+  --       '<leader>tS',
+  --       function()
+  --         require('neotest').run.stop()
+  --       end,
+  --       desc = 'Stop (Neotest)',
+  --     },
+  --     {
+  --       '<leader>tw',
+  --       function()
+  --         require('neotest').watch.toggle(vim.fn.expand '%')
+  --       end,
+  --       desc = 'Toggle Watch (Neotest)',
+  --     },
+  --   },
+  -- },
 }
