@@ -14,8 +14,15 @@ return {
       server = {
         -- cf notes-wiki Rust.md for the rational
         -- cmd = { '/usr/bin/rust-analyzer' },
-        -- NOT NEEDED? `mason` is handling `rust-analyzer` so it should not be coupled to the `rust-toolchain.toml`
-        --
+        -- - NOT NEEDED? `mason` is handling `rust-analyzer` so it should not be coupled to the `rust-toolchain.toml`
+        -- - yes, need something else 2 LSPs are attached, and eg "go to definition" lists each functions twice
+        --       cf https://github.com/mrcjkb/rustaceanvim/blob/master/doc/mason.txt
+        --       and https://github.com/mason-org/mason.nvim/blob/main/CHANGELOG.md#packageget_install_path-has-been-removed
+        --       --> cf `config` b/c `cmd` tries all resulted in 2 LSPs running
+        --       Solution and context: https://github.com/mrcjkb/rustaceanvim/discussions/174
+        --       and https://github.com/mrcjkb/rustaceanvim/discussions/94#discussioncomment-7813716
+        --       --> solution in init.lua with more context
+        -- end,
         auto_attach = function(bufnr)
           return not vim.g.rustacean_disabled
         end,
@@ -105,8 +112,12 @@ return {
       -- Disabled on windows b/c there we mostly use neovim to edit markdown
       -- Could work; but requires Rust Analyzer so not that relevant
       -- cond = not jit.os:find 'Windows',
-      if vim.fn.executable 'rust-analyzer' == 0 then
-        vim.api.nvim_err_writeln '**rust-analyzer** not found in PATH, please install it.\n'
+      -- if vim.fn.executable 'rust-analyzer' == 0 then
+      --   vim.api.nvim_err_writeln '**rust-analyzer** not found in PATH, please install it.\n'
+      -- end
+      local mason_registry = require 'mason-registry'
+      if not mason_registry.is_installed 'rust-analyzer' then
+        vim.notify('rust-analyzer NOT installed with mason! Skipping...', vim.log.levels.INFO)
       end
     end,
   },
