@@ -6,7 +6,8 @@ return {
   {
     'mrcjkb/rustaceanvim',
     -- TEMP? test if the default lsp `rust-analyzer` hangs less; cf config lspconfig below
-    enabled = true,
+    -- NOTE: MUST also see `automatic_enable` `exclude` in init.lua when this is enabled!
+    enabled = false,
     version = '^6', -- Recommended
     ft = { 'rust' },
     lazy = false, -- This plugin is already lazy
@@ -128,54 +129,52 @@ return {
   -- is started with the correct settings. Mason will manage the executable.
   -- WARNING: DO NOT config it via 'neovim/nvim-lspconfig' directly b/c that ends up starting 2 instances
   -- =============================================================================
-  -- {
-  --   'williamboman/mason-lspconfig.nvim',
-  --   opts = {
-  --     handlers = {
-  --       -- This function will be called for `rust_analyzer` INSTEAD OF the generic one from init.lua.
-  --       -- This resolves the "two clients" problem permanently.
-  --       rust_analyzer = function()
-  --         require('lspconfig').rust_analyzer.setup {
-  --           -- cf notes-wiki Rust.md for the rational
-  --           -- cmd = { '/usr/bin/rust-analyzer' },
-  --           -- NOT NEEDED? `mason` is handling `rust-analyzer` so it should not be coupled to the `rust-toolchain.toml`
-  --
-  --           on_attach = function(client, bufnr)
-  --             vim.keymap.set('n', '<leader>cA', vim.lsp.buf.code_action, { silent = true, buffer = bufnr, desc = 'LSP: [C]ode [A]ction' })
-  --
-  --             -- pratn custom: add a command to temp disable `rust-analyzer` etc
-  --             vim.api.nvim_create_user_command('RustAnalyzerDisableProject', function()
-  --               -- Stop current rust-analyzer clients
-  --               for _, client in ipairs(vim.lsp.get_clients { name = 'rust-analyzer' }) do
-  --                 vim.notify('rust-analyzer disabled. Restart with `RustAnalyzer start` to re-enable.', vim.log.levels.INFO)
-  --                 client.stop()
-  --               end
-  --             end, { desc = 'Disable rust-analyzer for current project' })
-  --           end,
-  --
-  --           -- Your specific settings for rust-analyzer. These will now be correctly applied.
-  --           settings = {
-  --             ['rust-analyzer'] = {
-  --               cargo = {
-  --                 allFeatures = false,
-  --                 features = { 'std' },
-  --                 loadOutDirsFromCheck = true,
-  --                 buildScripts = { enable = true },
-  --                 targetDir = true,
-  --               },
-  --               checkOnSave = true,
-  --               diagnostics = { enable = true },
-  --               procMacro = { enable = true },
-  --             },
-  --           },
-  --
-  --           -- This ensures completion capabilities are set up correctly.
-  --           capabilities = require('blink.cmp').get_lsp_capabilities(),
-  --         }
-  --       end,
-  --     },
-  --   },
-  -- },
+  {
+    'williamboman/mason-lspconfig.nvim',
+    opts = {
+      handlers = {
+        -- This function will be called for `rust_analyzer` INSTEAD OF the generic one from init.lua.
+        -- This resolves the "two clients" problem permanently.
+        rust_analyzer = function()
+          require('lspconfig').rust_analyzer.setup {
+            -- cf notes-wiki Rust.md for the rational
+            -- cmd = { '/usr/bin/rust-analyzer' },
+            -- NOT NEEDED? `mason` is handling `rust-analyzer` so it should not be coupled to the `rust-toolchain.toml`
+
+            on_attach = function(client, bufnr)
+              vim.keymap.set('n', '<leader>cA', vim.lsp.buf.code_action, { silent = true, buffer = bufnr, desc = 'LSP: [C]ode [A]ction' })
+
+              -- pratn custom: add a command to temp disable `rust-analyzer` etc
+              vim.api.nvim_create_user_command('RustAnalyzerDisableProject', function()
+                -- Stop current rust-analyzer clients
+                for _, client in ipairs(vim.lsp.get_clients { name = 'rust-analyzer' }) do
+                  vim.notify('rust-analyzer disabled. Restart with `RustAnalyzer start` to re-enable.', vim.log.levels.INFO)
+                  client.stop()
+                end
+              end, { desc = 'Disable rust-analyzer for current project' })
+            end,
+
+            settings = {
+              ['rust-analyzer'] = {
+                cargo = {
+                  allFeatures = false,
+                  features = { 'std' },
+                  loadOutDirsFromCheck = true,
+                  buildScripts = { enable = true },
+                  targetDir = true,
+                },
+                checkOnSave = true,
+                diagnostics = { enable = true },
+                procMacro = { enable = true },
+              },
+            },
+
+            -- capabilities = require('blink.cmp').get_lsp_capabilities(),
+          }
+        end,
+      },
+    },
+  },
 
   -- -- cf LazyVim config
   -- {

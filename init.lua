@@ -793,11 +793,11 @@ require('lazy').setup({
         -- followed by https://github.com/mrcjkb/rustaceanvim/pull/764 for Mason 2.0
         -- --> https://github.com/mrcjkb/rustaceanvim/pull/765
         -- --> finally points to: https://github.com/mason-org/mason-lspconfig.nvim#automatically-enable-installed-servers
-        automatic_enable = {
-          exclude = {
-            'rust_analyzer',
-          },
-        },
+        -- automatic_enable = {
+        --   exclude = {
+        --     'rust_analyzer',
+        --   },
+        -- },
         handlers = {
           function(server_name)
             local server = opts.servers[server_name] or {}
