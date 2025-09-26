@@ -267,6 +267,11 @@ vim.keymap.set('n', '<leader>gtl', function()
   end
 end, { desc = 'Toggle linematch' })
 
+-- right now, mostly (only) used to have per-project Rust Analyzer config
+-- b/c RA does not handle that on its own...
+vim.opt.exrc = true -- Enable reading .nvimrc/.exrc files
+vim.opt.secure = true -- Restrict dangerous commands in local configs
+
 -------------------------------------------------------------------------------
 -- Autocmd to close Neovim when the last real window is closed.
 -- ie make `:q` close Neovim if there if it is the last Window and the rest are Terminals

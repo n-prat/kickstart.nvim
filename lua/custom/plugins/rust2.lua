@@ -136,6 +136,7 @@ return {
         -- This function will be called for `rust_analyzer` INSTEAD OF the generic one from init.lua.
         -- This resolves the "two clients" problem permanently.
         rust_analyzer = function()
+          -- TODO https://old.reddit.com/r/neovim/comments/1nmh99k/beware_the_old_nvimlspconfig_setup_api_is/
           require('lspconfig').rust_analyzer.setup {
             -- cf notes-wiki Rust.md for the rational
             -- cmd = { '/usr/bin/rust-analyzer' },
