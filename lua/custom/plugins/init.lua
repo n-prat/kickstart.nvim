@@ -1135,49 +1135,50 @@ return {
   --
   -- ---
   -- --- See also: https://github.com/olimorris/codecompanion.nvim/discussions/1013
-  -- {
-  --   'olimorris/codecompanion.nvim',
-  --   dependencies = {
-  --     'nvim-lua/plenary.nvim',
-  --     'nvim-treesitter/nvim-treesitter',
-  --   },
-  --   config = function()
-  --     require('codecompanion').setup {
-  --       strategies = {
-  --         chat = { adapter = 'openrouter' },
-  --         inline = { adapter = 'openrouter' },
-  --         cmd = { adapter = 'openrouter' },
-  --       },
-  --       adapters = {
-  --         openrouter = function()
-  --           local openrouter_api_key = vim.env.CODECOMPANION_OPENROUTER_API_KEY
-  --           if not openrouter_api_key then
-  --             vim.notify('CODECOMPANION_OPENROUTER_API_KEY not set for codecompanion.nvim.', vim.log.levels.WARN)
-  --           end
-  --           return require('codecompanion.adapters').extend('openai_compatible', {
-  --             env = {
-  --               url = 'https://openrouter.ai/api',
-  --               api_key = openrouter_api_key,
-  --               chat_url = '/v1/chat/completions',
-  --             },
-  --             schema = {
-  --               model = {
-  --                 default = get_current_llm_model,
-  --               },
-  --             },
-  --           })
-  --         end,
-  --       },
-  --     }
-  --
-  --     -- Keymaps for codecompanion actions and shared model selection
-  --     vim.keymap.set({ 'n', 'v' }, '<leader>AK', '<cmd>CodeCompanionActions<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Actions' })
-  --     vim.keymap.set({ 'n', 'v' }, '<leader>AA', '<cmd>CodeCompanionChat Toggle<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Toggle Chat' })
-  --     -- These now call the shared functions defined at the top
-  --     vim.keymap.set('n', '<leader>AS', select_and_persist_session_model, { desc = 'LLM: Set [S]ession Model' })
-  --     vim.keymap.set('n', '<leader>AG', set_global_model, { desc = 'LLM: Set [G]lobal Model' })
-  --   end,
-  -- },
+  {
+    'olimorris/codecompanion.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      require('codecompanion').setup {
+        strategies = {
+          chat = { adapter = 'openrouter' },
+          inline = { adapter = 'openrouter' },
+          cmd = { adapter = 'openrouter' },
+        },
+        adapters = {
+          openrouter = function()
+            local openrouter_api_key = vim.env.OPENROUTER_API_KEY
+            if not openrouter_api_key then
+              vim.notify('OPENROUTER_API_KEY not set for codecompanion.nvim.', vim.log.levels.WARN)
+            end
+            return require('codecompanion.adapters').extend('openai_compatible', {
+              env = {
+                url = 'https://openrouter.ai/api',
+                api_key = openrouter_api_key,
+                chat_url = '/v1/chat/completions',
+              },
+              schema = {
+                model = {
+                  default = 'moonshotai/kimi-k2-thinking',
+                  -- default = get_current_llm_model,
+                },
+              },
+            })
+          end,
+        },
+      }
+
+      -- -- Keymaps for codecompanion actions and shared model selection
+      -- vim.keymap.set({ 'n', 'v' }, '<leader>AK', '<cmd>CodeCompanionActions<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Actions' })
+      -- vim.keymap.set({ 'n', 'v' }, '<leader>AA', '<cmd>CodeCompanionChat Toggle<cr>', { noremap = true, silent = true, desc = 'CodeCompanion Toggle Chat' })
+      -- -- These now call the shared functions defined at the top
+      -- vim.keymap.set('n', '<leader>AS', select_and_persist_session_model, { desc = 'LLM: Set [S]ession Model' })
+      -- vim.keymap.set('n', '<leader>AG', set_global_model, { desc = 'LLM: Set [G]lobal Model' })
+    end,
+  },
 
   --- Avante (newly added, also uses shared logic)
   -- {
