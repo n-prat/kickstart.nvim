@@ -1133,6 +1133,7 @@ return {
   -- },
   -- },
   --
+
   -- ---
   -- --- See also: https://github.com/olimorris/codecompanion.nvim/discussions/1013
   {
@@ -1141,6 +1142,18 @@ return {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
       'ravitemer/codecompanion-history.nvim',
+      -- installed with `uv tool install "vectorcode[lsp,mcp]<1.0.0"`
+      -- cf https://github.com/Davidyz/VectorCode/blob/main/docs/cli.md#installation
+      -- WARNING: when using `claude_code` ACP adapter, you can NOT use tools
+      -- In this case: `claude mcp add --transport stdio "vectorcode-mcp-server" vectorcode-mcp-server`
+      -- and Claude Code will be able to use vectorcode via MCP on its own
+      {
+        'Davidyz/VectorCode',
+        version = '*',
+        build = 'uv tool upgrade vectorcode', -- This helps keeping the CLI up-to-date
+        -- build = "pipx upgrade vectorcode", -- If you used pipx to install the CLI
+        dependencies = { 'nvim-lua/plenary.nvim' },
+      },
     },
     config = function()
       require('codecompanion').setup {
@@ -1212,10 +1225,10 @@ return {
               --   auto_generate_title = true,
               title_generation_opts = {
                 ---Adapter for generating titles (defaults to current chat adapter)
-                -- adapter = 'openrouter', -- "copilot"
+                adapter = 'openrouter', -- "copilot"
                 ---Model for generating titles (defaults to current chat model)
-                -- model = 'moonshotai/kimi-k2-thinking', -- "gpt-4o"
-                model = 'haiku', -- "gpt-4o"
+                model = 'moonshotai/kimi-k2-thinking', -- "gpt-4o"
+                -- model = 'haiku', -- "gpt-4o"
                 --     ---Number of user prompts after which to refresh the title (0 to disable)
                 --     refresh_every_n_prompts = 0, -- e.g., 3 to refresh after every 3rd user prompt
                 --     ---Maximum number of times to refresh the title (default: 3)
@@ -1272,6 +1285,46 @@ return {
             --     index_on_startup = false,
             --   },
             -- },
+          },
+          vectorcode = {
+            enabled = true,
+            opts = {
+              tool_group = {
+                -- this will register a tool group called `@vectorcode_toolbox` that contains all 3 tools
+                enabled = true,
+                -- a list of extra tools that you want to include in `@vectorcode_toolbox`.
+                -- if you use @vectorcode_vectorise, it'll be very handy to include
+                -- `file_search` here.
+                extras = {},
+                collapse = true, -- whether the individual tools should be shown in the chat
+              },
+              tool_opts = {
+                ---@type VectorCode.CodeCompanion.ToolOpts
+                ['*'] = { use_lsp = true },
+                ---@type VectorCode.CodeCompanion.LsToolOpts
+                ls = {},
+                ---@type VectorCode.CodeCompanion.VectoriseToolOpts
+                vectorise = {},
+                ---@type VectorCode.CodeCompanion.QueryToolOpts
+                query = {
+                  max_num = { chunk = -1, document = -1 },
+                  default_num = { chunk = 50, document = 10 },
+                  include_stderr = false,
+                  use_lsp = false,
+                  no_duplicate = true,
+                  chunk_mode = false,
+                  ---@type VectorCode.CodeCompanion.SummariseOpts
+                  summarise = {
+                    ---@type boolean|(fun(chat: CodeCompanion.Chat, results: VectorCode.QueryResult[]):boolean)|nil
+                    enabled = false,
+                    adapter = nil,
+                    query_augmented = true,
+                  },
+                },
+                files_ls = {},
+                files_rm = {},
+              },
+            },
           },
         },
       }

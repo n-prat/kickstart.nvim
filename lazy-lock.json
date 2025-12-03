@@ -1,4 +1,5 @@
 {
+  "VectorCode": { "branch": "main", "commit": "171361ea0410e739f9bf2a04c75113cd80d3c0d0" },
   "auto-save.nvim": { "branch": "main", "commit": "5fbcaac0a2698c87a9a1bd2083cb6949505cca12" },
   "better-escape.nvim": { "branch": "master", "commit": "19a38aab94961016430905ebec30d272a01e9742" },
   "blink.cmp": { "branch": "main", "commit": "b19413d214068f316c78978b08264ed1c41830ec" },
