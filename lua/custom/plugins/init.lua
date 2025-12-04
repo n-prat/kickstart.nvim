@@ -162,7 +162,7 @@ return {
         harpoon.ui:toggle_quick_menu(harpoon:list())
       end, { desc = 'Open harpoon window' })
 
-      vim.keymap.set('n', '<leader>a', function()
+      vim.keymap.set('n', '<C-a>', function()
         harpoon:list():add()
       end)
       vim.keymap.set('n', '<C-e>', function()
@@ -266,8 +266,20 @@ return {
               ['<c-a-i>'] = { 'toggle_ignored', mode = { 'i', 'n' } },
               ['<c-H>'] = { 'toggle_hidden', mode = { 'i', 'n' } },
               ['<c-a-f>'] = { 'toggle_follow', mode = { 'i', 'n' } },
+
+              -- https://github.com/folke/sidekick.nvim#snacksnvim-picker-integration
+              ['<a-a>'] = {
+                'sidekick_send',
+                mode = { 'n', 'i' },
+              },
             },
           },
+        },
+        -- https://github.com/folke/sidekick.nvim#snacksnvim-picker-integration
+        actions = {
+          sidekick_send = function(...)
+            return require('sidekick.cli.picker.snacks').send(...)
+          end,
         },
       },
       quickfile = {
@@ -1336,6 +1348,120 @@ return {
       -- vim.keymap.set('n', '<leader>AS', select_and_persist_session_model, { desc = 'LLM: Set [S]ession Model' })
       -- vim.keymap.set('n', '<leader>AG', set_global_model, { desc = 'LLM: Set [G]lobal Model' })
     end,
+  },
+
+  {
+    'folke/sidekick.nvim',
+    opts = {
+      cli = {
+        mux = {
+          backend = 'zellij',
+          enabled = true,
+          split = {
+            vertical = true,
+            -- size = 0.3, -- default: 0.5 -- NOT WORKING with zellij
+            -- size = 60, -- NOT WORKING either
+          },
+        },
+        win = {
+          layout = 'right',
+          split = {
+            width = 0, -- Set to 0 so the default logic ignores it initially
+          },
+          -- The Magic Hook
+          config = function(terminal)
+            -- terminal.opts is a deepcopy of Config.cli.win
+            -- We can calculate the integer width here dynamically
+            terminal.opts.split.width = math.floor(vim.o.columns * 0.40)
+          end,
+        },
+      },
+      -- NES = Next Edit Suggestions: requires Copilot
+      nes = { enabled = false },
+    },
+    keys = {
+      {
+        '<tab>',
+        function()
+          -- if there is a next edit, jump to it, otherwise apply it if any
+          if not require('sidekick').nes_jump_or_apply() then
+            return '<Tab>' -- fallback to normal tab
+          end
+        end,
+        expr = true,
+        desc = 'Goto/Apply Next Edit Suggestion',
+      },
+      {
+        '<c-.>',
+        function()
+          require('sidekick.cli').toggle()
+        end,
+        desc = 'Sidekick Toggle',
+        mode = { 'n', 't', 'i', 'x' },
+      },
+      {
+        '<leader>aa',
+        function()
+          require('sidekick.cli').toggle()
+        end,
+        desc = 'Sidekick Toggle CLI',
+      },
+      {
+        '<leader>as',
+        function()
+          require('sidekick.cli').select()
+        end,
+        -- Or to select only installed tools:
+        -- require("sidekick.cli").select({ filter = { installed = true } })
+        desc = 'Select CLI',
+      },
+      {
+        '<leader>ad',
+        function()
+          require('sidekick.cli').close()
+        end,
+        desc = 'Detach a CLI Session',
+      },
+      {
+        '<leader>at',
+        function()
+          require('sidekick.cli').send { msg = '{this}' }
+        end,
+        mode = { 'x', 'n' },
+        desc = 'Send This',
+      },
+      {
+        '<leader>af',
+        function()
+          require('sidekick.cli').send { msg = '{file}' }
+        end,
+        desc = 'Send File',
+      },
+      {
+        '<leader>av',
+        function()
+          require('sidekick.cli').send { msg = '{selection}' }
+        end,
+        mode = { 'x' },
+        desc = 'Send Visual Selection',
+      },
+      {
+        '<leader>ap',
+        function()
+          require('sidekick.cli').prompt()
+        end,
+        mode = { 'n', 'x' },
+        desc = 'Sidekick Select Prompt',
+      },
+      -- Example of a keybinding to open Claude directly
+      {
+        '<leader>ac',
+        function()
+          require('sidekick.cli').toggle { name = 'claude', focus = true }
+        end,
+        desc = 'Sidekick Toggle Claude',
+      },
+    },
   },
 
   --- Avante (newly added, also uses shared logic)
