@@ -1145,7 +1145,7 @@ return {
       -- installed with `uv tool install "vectorcode[lsp,mcp]<1.0.0"`
       -- cf https://github.com/Davidyz/VectorCode/blob/main/docs/cli.md#installation
       -- WARNING: when using `claude_code` ACP adapter, you can NOT use tools
-      -- In this case: `claude mcp add --transport stdio "vectorcode-mcp-server" vectorcode-mcp-server`
+      -- In this case: `claude mcp add --scope user --transport stdio "vectorcode-mcp-server" vectorcode-mcp-server`
       -- and Claude Code will be able to use vectorcode via MCP on its own
       {
         'Davidyz/VectorCode',
