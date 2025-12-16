@@ -611,7 +611,6 @@ return {
     'akinsho/toggleterm.nvim',
     version = '*',
     opts = {
-      size = 60,
       -- Automatically close terminals when Neovim exits
       close_on_exit = true,
       -- This makes the layout more stable when toggling
@@ -645,8 +644,44 @@ return {
         -- A unique name for this terminal
         id = 1,
         display_name = 'Test Runner',
-        -- Open as a vertical split on the right
+        -- Open as a vertical split (creates left/right split)
         direction = 'vertical',
+        -- Dynamic sizing: 40% but min 40 cols, max depends on context
+        size = function()
+          local width = math.floor(vim.o.columns * 0.40)
+          -- Context-aware: count vertical splits (non-floating windows)
+          local vertical_splits = 0
+          for _, win in ipairs(vim.api.nvim_list_wins()) do
+            local config = vim.api.nvim_win_get_config(win)
+            -- Count only non-floating windows (vertical splits)
+            if config.relative == '' then
+              vertical_splits = vertical_splits + 1
+            end
+          end
+          -- If 3+ vertical splits (terminals + editor + Claude), use max 45; else max 60
+          local max_cols = vertical_splits >= 3 and 45 or 60
+          return math.min(max_cols, math.max(40, width))
+        end,
+        -- Resize window after opening (similar to sidekick's Magic Hook)
+        on_open = function(term)
+          vim.defer_fn(function()
+            if term.window and vim.api.nvim_win_is_valid(term.window) then
+              local width = math.floor(vim.o.columns * 0.40)
+              -- Count vertical splits (non-floating windows)
+              local vertical_splits = 0
+              for _, win in ipairs(vim.api.nvim_list_wins()) do
+                local config = vim.api.nvim_win_get_config(win)
+                if config.relative == '' then
+                  vertical_splits = vertical_splits + 1
+                end
+              end
+              -- If 3+ vertical splits (terminals + editor + Claude), use max 45; else max 60
+              local max_cols = vertical_splits >= 3 and 45 or 60
+              local target_cols = math.min(max_cols, math.max(40, width))
+              vim.api.nvim_win_set_width(term.window, target_cols)
+            end
+          end, 10)
+        end,
         -- You could have it run a command on start, e.g., 'cargo watch -x test'
         -- cmd = "cargo watch -x test",
         hidden = true, -- Start hidden
@@ -655,8 +690,29 @@ return {
       local terminal_git = Terminal:new {
         id = 2,
         display_name = 'Git/jj CLI',
-        -- Open as a horizontal split
+        -- Back to vertical to restore stacking behavior
         direction = 'vertical',
+        -- No size function - will inherit width from terminal_test
+        -- Resize window after opening to match terminal_test width
+        on_open = function(term)
+          vim.defer_fn(function()
+            if term.window and vim.api.nvim_win_is_valid(term.window) then
+              local width = math.floor(vim.o.columns * 0.40)
+              -- Count vertical splits (non-floating windows)
+              local vertical_splits = 0
+              for _, win in ipairs(vim.api.nvim_list_wins()) do
+                local config = vim.api.nvim_win_get_config(win)
+                if config.relative == '' then
+                  vertical_splits = vertical_splits + 1
+                end
+              end
+              -- If 3+ vertical splits (terminals + editor + Claude), use max 45; else max 60
+              local max_cols = vertical_splits >= 3 and 45 or 60
+              local target_cols = math.min(max_cols, math.max(40, width))
+              vim.api.nvim_win_set_width(term.window, target_cols)
+            end
+          end, 10)
+        end,
         hidden = true,
       }
 
@@ -1355,24 +1411,25 @@ return {
     opts = {
       cli = {
         mux = {
-          backend = 'zellij',
+          backend = 'tmux',
           enabled = true,
           split = {
             vertical = true,
-            -- size = 0.3, -- default: 0.5 -- NOT WORKING with zellij
-            -- size = 60, -- NOT WORKING either
+            -- Try fixed integer columns to test if percentages are the problem
+            size = 50,  -- Fixed 50 columns for testing
           },
         },
         win = {
+          -- Testing if win.config hook affects tmux backend sizing
           layout = 'right',
           split = {
-            width = 0, -- Set to 0 so the default logic ignores it initially
+            width = 0,
           },
-          -- The Magic Hook
+          -- The Magic Hook - testing with tmux backend
           config = function(terminal)
-            -- terminal.opts is a deepcopy of Config.cli.win
-            -- We can calculate the integer width here dynamically
-            terminal.opts.split.width = math.floor(vim.o.columns * 0.40)
+            local width = math.floor(vim.o.columns * 0.40)
+            local target_cols = math.min(60, math.max(40, width))
+            terminal.opts.split.width = target_cols
           end,
         },
       },
