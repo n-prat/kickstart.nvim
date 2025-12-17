@@ -530,13 +530,10 @@ local function enforce_layout_constraints()
       elseif buftype == 'terminal' then
         -- Regular terminal constraints (not sidekick)
         if is_vertical_split then
-          -- Enforce MIN width
+          -- Enforce MIN width only (allow user to resize larger)
           if width < LAYOUT.min_terminal then
             vim.notify('(V) terminal too small; force resizing!', vim.log.levels.INFO)
             vim.api.nvim_win_set_width(win, LAYOUT.min_terminal)
-          -- Enforce MAX width
-          elseif width > max_terminal_width then
-            vim.api.nvim_win_set_width(win, max_terminal_width)
           end
         else
           -- For horizontal splits, ONLY enforce minimum HEIGHT.
@@ -546,31 +543,6 @@ local function enforce_layout_constraints()
           end
         end
       end
-    end
-  end
-
-  -- Warn if not enough space for code pane (editor) when 2+ vertical splits open
-  if count_vertical_splits() >= 3 then
-    -- Calculate total width used by non-editor windows (only count vertical splits)
-    local used_width = 0
-    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-      if vim.api.nvim_win_is_valid(win) then
-        local buf = vim.api.nvim_win_get_buf(win)
-        local buftype = vim.api.nvim_get_option_value('buftype', { buf = buf })
-        -- Exclusive detection using helper (prevents double-counting)
-        local is_sidekick = is_sidekick_buffer(buf)
-        -- Only count if it's a vertical split (side-by-side), not horizontal (stacked)
-        if is_vertical_split_window(win) and (is_sidekick or (buftype == 'terminal' and not is_sidekick)) then
-          used_width = used_width + vim.api.nvim_win_get_width(win)
-        end
-      end
-    end
-    local remaining = vim.o.columns - used_width
-    if remaining < LAYOUT.min_editor then
-      vim.notify(
-        string.format('Not enough space for editor (need %d+ cols, have %d). Close a split or resize window.', LAYOUT.min_editor, remaining),
-        vim.log.levels.WARN
-      )
     end
   end
 end
