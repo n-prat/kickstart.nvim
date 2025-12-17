@@ -376,31 +376,167 @@ vim.api.nvim_create_autocmd('QuitPre', {
 })
 
 -------------------------------------------------------------------------------
---- Try to enforce a MIN (relative) size for all terminals windows
+--- Window Layout Management (toggleterm + sidekick)
 ---
+--- This is THE SINGLE SOURCE OF TRUTH for all layout logic.
+--- Referenced by:
+---   - lua/custom/plugins/init.lua (toggleterm config)
+---   - lua/custom/plugins/init.lua (sidekick config)
+---
+--- Enforces:
+---   - Min terminal size (45 cols)
+---   - Max terminal size (45-60 cols, context-aware)
+---   - Min sidekick size (45 cols)
+---   - Min code pane size (60 cols) - warns if not enough space
+-------------------------------------------------------------------------------
 
-local function enforce_min_terminal_size_context_aware()
-  local min_width = math.floor(vim.o.columns * 0.20)
-  local min_height = math.floor(vim.o.lines * 0.20)
+--- Count non-floating vertical splits
+local function count_vertical_splits()
+  local count = 0
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local config = vim.api.nvim_win_get_config(win)
+    if config.relative == '' then
+      count = count + 1
+    end
+  end
+  return count
+end
+
+--- Calculate context-aware terminal width (min 45, max 45-60 based on split count)
+local function calculate_terminal_width()
+  local width = math.floor(vim.o.columns * 0.40)
+  -- If 3+ vertical splits (terminals + editor + Claude), use max 45; else max 60
+  local max_cols = count_vertical_splits() >= 3 and 45 or 60
+  return math.min(max_cols, math.max(45, width))
+end
+
+--- Layout constants
+local LAYOUT = {
+  min_editor = 60,
+  min_terminal = 45,
+  min_sidekick = 45,
+}
+
+--- Check if a buffer is a sidekick/claude window
+local function is_sidekick_buffer(buf)
+  local bufname = vim.api.nvim_buf_get_name(buf)
+  return bufname:match('sidekick') or bufname:match('claude')
+end
+
+--- Check if a window is in a vertical split (side-by-side arrangement)
+--- Uses both position-based and dimension-based heuristics
+local function is_vertical_split_window(win)
+  local pos = vim.api.nvim_win_get_position(win)
+  local col = pos[2]
+  local width = vim.api.nvim_win_get_width(win)
+  local height = vim.api.nvim_win_get_height(win)
+
+  -- Primary: If window doesn't start at column 0, it's definitely a vertical split
+  if col > 0 then
+    return true
+  end
+
+  -- Fallback: Use dimension heuristic (taller than wide = likely vertical split)
+  return height > width
+end
+
+--- Check if opening a new vertical split would leave enough editor space
+--- @param new_width number Width of the new window to open
+--- @return boolean can_open, string? reason
+local function can_open_new_split(new_width)
+  local has_sidekick = false
+  local has_terminal_col = false -- Track if any terminal column exists
+
+  -- Track unique column positions to avoid counting stacked windows multiple times
+  local terminal_cols = {}
 
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
     if vim.api.nvim_win_is_valid(win) then
       local buf = vim.api.nvim_win_get_buf(win)
       local buftype = vim.api.nvim_get_option_value('buftype', { buf = buf })
 
-      if buftype == 'terminal' then
-        local width = vim.api.nvim_win_get_width(win)
-        local height = vim.api.nvim_win_get_height(win)
+      if is_sidekick_buffer(buf) then
+        has_sidekick = true
+      elseif buftype == 'terminal' and is_vertical_split_window(win) then
+        -- Only count terminals in vertical splits, and track their X position
+        local pos = vim.api.nvim_win_get_position(win)
+        local col = pos[2]
+        terminal_cols[col] = true -- Use column as key to deduplicate stacked terminals
+      end
+    end
+  end
 
-        -- Heuristic: If it's taller than it is wide, assume it's a vertical split.
-        -- Really complicated alternatives would be:
-        -- - option 1: winlayout
-        -- - option 2: nvim_win_get_position
-        if height > width then
-          -- For vertical splits, ONLY enforce minimum WIDTH.
-          if width < min_width then
+  -- Count unique terminal columns (stacked terminals share same column)
+  local terminal_col_count = 0
+  for _ in pairs(terminal_cols) do
+    terminal_col_count = terminal_col_count + 1
+  end
+
+  -- Calculate minimum possible width (shrink everything to minimums)
+  local min_used = (terminal_col_count * LAYOUT.min_terminal) + (has_sidekick and LAYOUT.min_sidekick or 0) + new_width
+
+  local remaining_at_min = vim.o.columns - min_used
+
+  if remaining_at_min < LAYOUT.min_editor then
+    return false, string.format('Not enough space even at minimums (need %d, have %d)', LAYOUT.min_editor, remaining_at_min)
+  end
+
+  return true, nil
+end
+
+--- Force all terminals and sidekick to minimum size
+local function shrink_to_minimums()
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local buftype = vim.api.nvim_get_option_value('buftype', { buf = buf })
+
+      -- Use improved vertical split detection
+      if is_vertical_split_window(win) then
+        if is_sidekick_buffer(buf) then
+          vim.api.nvim_win_set_width(win, LAYOUT.min_sidekick)
+        elseif buftype == 'terminal' then
+          vim.api.nvim_win_set_width(win, LAYOUT.min_terminal)
+        end
+      end
+    end
+  end
+end
+
+--- Enforce layout constraints for all windows
+local function enforce_layout_constraints()
+  local min_height = math.floor(vim.o.lines * 0.20)
+  local max_terminal_width = calculate_terminal_width()
+
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local buftype = vim.api.nvim_get_option_value('buftype', { buf = buf })
+      local width = vim.api.nvim_win_get_width(win)
+      local height = vim.api.nvim_win_get_height(win)
+
+      -- Use improved vertical split detection (position + dimension heuristic)
+      local is_vertical_split = is_vertical_split_window(win)
+
+      -- Exclusive detection: sidekick/claude first, then non-sidekick terminals
+      local is_sidekick = is_sidekick_buffer(buf)
+
+      if is_sidekick then
+        -- Sidekick window constraints
+        if is_vertical_split and width < LAYOUT.min_sidekick then
+          vim.notify('Sidekick too small; force resizing!', vim.log.levels.INFO)
+          vim.api.nvim_win_set_width(win, LAYOUT.min_sidekick)
+        end
+      elseif buftype == 'terminal' then
+        -- Regular terminal constraints (not sidekick)
+        if is_vertical_split then
+          -- Enforce MIN width
+          if width < LAYOUT.min_terminal then
             vim.notify('(V) terminal too small; force resizing!', vim.log.levels.INFO)
-            vim.api.nvim_win_set_width(win, min_width)
+            vim.api.nvim_win_set_width(win, LAYOUT.min_terminal)
+          -- Enforce MAX width
+          elseif width > max_terminal_width then
+            vim.api.nvim_win_set_width(win, max_terminal_width)
           end
         else
           -- For horizontal splits, ONLY enforce minimum HEIGHT.
@@ -412,15 +548,55 @@ local function enforce_min_terminal_size_context_aware()
       end
     end
   end
+
+  -- Warn if not enough space for code pane (editor) when 2+ vertical splits open
+  if count_vertical_splits() >= 3 then
+    -- Calculate total width used by non-editor windows (only count vertical splits)
+    local used_width = 0
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if vim.api.nvim_win_is_valid(win) then
+        local buf = vim.api.nvim_win_get_buf(win)
+        local buftype = vim.api.nvim_get_option_value('buftype', { buf = buf })
+        -- Exclusive detection using helper (prevents double-counting)
+        local is_sidekick = is_sidekick_buffer(buf)
+        -- Only count if it's a vertical split (side-by-side), not horizontal (stacked)
+        if is_vertical_split_window(win) and (is_sidekick or (buftype == 'terminal' and not is_sidekick)) then
+          used_width = used_width + vim.api.nvim_win_get_width(win)
+        end
+      end
+    end
+    local remaining = vim.o.columns - used_width
+    if remaining < LAYOUT.min_editor then
+      vim.notify(
+        string.format('Not enough space for editor (need %d+ cols, have %d). Close a split or resize window.', LAYOUT.min_editor, remaining),
+        vim.log.levels.WARN
+      )
+    end
+  end
 end
 
+-- Enforce layout on any window resize (also fires after WinNew/WinClosed)
 vim.api.nvim_create_autocmd('WinResized', {
   pattern = '*',
-  desc = 'Enforce a minimum size for terminal windows (context-aware)',
+  desc = 'Enforce layout constraints for terminals and sidekick',
   callback = function()
-    vim.schedule(enforce_min_terminal_size_context_aware)
+    vim.schedule(enforce_layout_constraints)
   end,
 })
+
+-- Global API for plugins to use
+_G.NvimLayout = {
+  can_open_new_split = can_open_new_split,
+  shrink_to_minimums = shrink_to_minimums,
+  LAYOUT = LAYOUT,
+}
+
+-- Verify setup
+if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' then
+  vim.notify('NvimLayout API initialized successfully', vim.log.levels.DEBUG)
+else
+  vim.notify('ERROR: NvimLayout API failed to initialize!', vim.log.levels.ERROR)
+end
 
 -------------------------------------------------------------------------------
 ---

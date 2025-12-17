@@ -637,106 +637,49 @@ return {
     config = function(_, opts)
       require('toggleterm').setup(opts)
 
-      -- Define our custom terminals
       local Terminal = require('toggleterm.terminal').Terminal
 
       local terminal_test = Terminal:new {
-        -- A unique name for this terminal
         id = 1,
         display_name = 'Test Runner',
-        -- Open as a vertical split (creates left/right split)
         direction = 'vertical',
-        -- Dynamic sizing: 40% but min 40 cols, max depends on context
-        size = function()
-          local width = math.floor(vim.o.columns * 0.40)
-          -- Context-aware: count vertical splits (non-floating windows)
-          local vertical_splits = 0
-          for _, win in ipairs(vim.api.nvim_list_wins()) do
-            local config = vim.api.nvim_win_get_config(win)
-            -- Count only non-floating windows (vertical splits)
-            if config.relative == '' then
-              vertical_splits = vertical_splits + 1
-            end
-          end
-          -- If 3+ vertical splits (terminals + editor + Claude), use max 45; else max 60
-          local max_cols = vertical_splits >= 3 and 45 or 60
-          return math.min(max_cols, math.max(40, width))
-        end,
-        -- Resize window after opening (similar to sidekick's Magic Hook)
-        on_open = function(term)
-          vim.defer_fn(function()
-            if term.window and vim.api.nvim_win_is_valid(term.window) then
-              local width = math.floor(vim.o.columns * 0.40)
-              -- Count vertical splits (non-floating windows)
-              local vertical_splits = 0
-              for _, win in ipairs(vim.api.nvim_list_wins()) do
-                local config = vim.api.nvim_win_get_config(win)
-                if config.relative == '' then
-                  vertical_splits = vertical_splits + 1
-                end
-              end
-              -- If 3+ vertical splits (terminals + editor + Claude), use max 45; else max 60
-              local max_cols = vertical_splits >= 3 and 45 or 60
-              local target_cols = math.min(max_cols, math.max(40, width))
-              vim.api.nvim_win_set_width(term.window, target_cols)
-            end
-          end, 10)
-        end,
-        -- You could have it run a command on start, e.g., 'cargo watch -x test'
-        -- cmd = "cargo watch -x test",
-        hidden = true, -- Start hidden
+        size = 50, -- Actual constraints enforced by WinResized autocmd in init.lua
+        hidden = true,
       }
 
       local terminal_git = Terminal:new {
         id = 2,
         display_name = 'Git/jj CLI',
-        -- Back to vertical to restore stacking behavior
         direction = 'vertical',
-        -- No size function - will inherit width from terminal_test
-        -- Resize window after opening to match terminal_test width
-        on_open = function(term)
-          vim.defer_fn(function()
-            if term.window and vim.api.nvim_win_is_valid(term.window) then
-              local width = math.floor(vim.o.columns * 0.40)
-              -- Count vertical splits (non-floating windows)
-              local vertical_splits = 0
-              for _, win in ipairs(vim.api.nvim_list_wins()) do
-                local config = vim.api.nvim_win_get_config(win)
-                if config.relative == '' then
-                  vertical_splits = vertical_splits + 1
-                end
-              end
-              -- If 3+ vertical splits (terminals + editor + Claude), use max 45; else max 60
-              local max_cols = vertical_splits >= 3 and 45 or 60
-              local target_cols = math.min(max_cols, math.max(40, width))
-              vim.api.nvim_win_set_width(term.window, target_cols)
-            end
-          end, 10)
-        end,
         hidden = true,
       }
 
-      --- Helper function to open the layout and focus a specific terminal.
-      -- @param target_term table The terminal object to focus (e.g., test_runner)
+      --- Opens both terminals and focuses the target one.
       local function open_and_focus(target_term)
-        -- If the target is already open, just focus it.
         if target_term:is_open() then
           vim.fn.win_gotoid(target_term.window)
-          -- vim.cmd 'startinsert!'
           return
         end
 
-        -- If not open, create the full layout.
+        -- Check space before opening (45 = min terminal width)
+        if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' and _G.NvimLayout.LAYOUT then
+          local can_open, reason = _G.NvimLayout.can_open_new_split(_G.NvimLayout.LAYOUT.min_terminal)
+          if not can_open then
+            vim.notify('Warning: ' .. reason .. ' - Opening anyway', vim.log.levels.WARN)
+          end
+          -- Shrink existing windows to make room
+          _G.NvimLayout.shrink_to_minimums()
+        end
+
+        -- Open both; WinResized autocmd in init.lua enforces layout constraints
         terminal_test:open()
         terminal_git:open()
 
-        -- Defer focus until after Neovim has drawn the windows.
         vim.defer_fn(function()
           if target_term:is_open() then
             vim.fn.win_gotoid(target_term.window)
-            -- vim.cmd 'startinsert!'
           end
-        end, 10) -- A small delay is safer
+        end, 10)
       end
 
       vim.keymap.set('n', '<leader>tt', function()
@@ -1415,17 +1358,15 @@ return {
           enabled = true,
           split = {
             vertical = true,
-            -- Try fixed integer columns to test if percentages are the problem
-            size = 50,  -- Fixed 50 columns for testing
+            size = 50, -- Actual constraints enforced by WinResized autocmd in init.lua
           },
         },
         win = {
-          -- Testing if win.config hook affects tmux backend sizing
           layout = 'right',
           split = {
             width = 0,
           },
-          -- The Magic Hook - testing with tmux backend
+          -- Magic Hook for initial sizing; constraints enforced by WinResized autocmd in init.lua
           config = function(terminal)
             local width = math.floor(vim.o.columns * 0.40)
             local target_cols = math.min(60, math.max(40, width))
@@ -1451,7 +1392,16 @@ return {
       {
         '<c-.>',
         function()
-          require('sidekick.cli').toggle()
+          -- Check space before opening (only when opening, not closing)
+          local cli = require('sidekick.cli')
+          if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' and _G.NvimLayout.LAYOUT then
+            local can_open, reason = _G.NvimLayout.can_open_new_split(_G.NvimLayout.LAYOUT.min_sidekick)
+            if not can_open then
+              vim.notify('Warning: ' .. reason .. ' - Opening anyway', vim.log.levels.WARN)
+            end
+            _G.NvimLayout.shrink_to_minimums()
+          end
+          cli.toggle()
         end,
         desc = 'Sidekick Toggle',
         mode = { 'n', 't', 'i', 'x' },
@@ -1459,7 +1409,15 @@ return {
       {
         '<leader>aa',
         function()
-          require('sidekick.cli').toggle()
+          local cli = require('sidekick.cli')
+          if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' and _G.NvimLayout.LAYOUT then
+            local can_open, reason = _G.NvimLayout.can_open_new_split(_G.NvimLayout.LAYOUT.min_sidekick)
+            if not can_open then
+              vim.notify('Warning: ' .. reason .. ' - Opening anyway', vim.log.levels.WARN)
+            end
+            _G.NvimLayout.shrink_to_minimums()
+          end
+          cli.toggle()
         end,
         desc = 'Sidekick Toggle CLI',
       },
@@ -1510,11 +1468,18 @@ return {
         mode = { 'n', 'x' },
         desc = 'Sidekick Select Prompt',
       },
-      -- Example of a keybinding to open Claude directly
       {
         '<leader>ac',
         function()
-          require('sidekick.cli').toggle { name = 'claude', focus = true }
+          local cli = require('sidekick.cli')
+          if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' and _G.NvimLayout.LAYOUT then
+            local can_open, reason = _G.NvimLayout.can_open_new_split(_G.NvimLayout.LAYOUT.min_sidekick)
+            if not can_open then
+              vim.notify('Warning: ' .. reason .. ' - Opening anyway', vim.log.levels.WARN)
+            end
+            _G.NvimLayout.shrink_to_minimums()
+          end
+          cli.toggle { name = 'claude', focus = true }
         end,
         desc = 'Sidekick Toggle Claude',
       },
