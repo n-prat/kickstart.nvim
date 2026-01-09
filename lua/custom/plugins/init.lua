@@ -544,7 +544,7 @@ return {
         end,
         desc = 'Projects',
       },
-      -- LSP
+      -- LSP (using gr* pattern to match nvim-nightly 0.12)
       {
         'gd',
         function()
@@ -553,7 +553,7 @@ return {
         desc = '[snacks.picker] Goto Definition',
       },
       {
-        'gr',
+        'grr',
         function()
           Snacks.picker.lsp_references()
         end,
@@ -561,25 +561,33 @@ return {
         desc = '[snacks.picker] References',
       },
       {
-        'gI',
+        'gri',
         function()
           Snacks.picker.lsp_implementations()
         end,
         desc = '[snacks.picker] Goto Implementation',
       },
       {
-        'gy',
+        'grt',
         function()
           Snacks.picker.lsp_type_definitions()
         end,
-        desc = '[snacks.picker] Goto T[y]pe Definition',
+        desc = '[snacks.picker] Goto Type Definition',
       },
       {
-        '<leader>ss',
+        'gO',
         function()
           Snacks.picker.lsp_symbols()
         end,
-        desc = '[snacks.picker] LSP Symbols',
+        desc = '[snacks.picker] Document Symbols',
+      },
+      {
+        'gra',
+        function()
+          Snacks.picker.lsp_code_actions()
+        end,
+        mode = { 'n', 'x' },
+        desc = '[snacks.picker] Code Actions',
       },
       -- n-prat: custom Snacks.picker
       {
@@ -1642,6 +1650,50 @@ return {
   --- Just try to prevent eg opening Neovim for `git commit` when already inside a Neovim session [terminal]
   {
     'brianhuster/unnest.nvim',
+  },
+
+  -------------------------------------------------------------------------------
+  --- Movement training plugins (match nvim-nightly 0.12)
+  --- Nudges away from overusing w, b, hjkl toward f, t, /, *, etc.
+  {
+    'm4xshen/hardtime.nvim',
+    dependencies = { 'MunifTanjim/nui.nvim' },
+    opts = {
+      max_count = 3, -- allow 3 repeated motions before blocking
+      max_time = 3000, -- 3 second window (default 1s is too easy to game)
+      disable_mouse = false,
+      hint = true, -- show "Try using f/t//" hints
+      notification = true,
+      enabled = true, -- start enabled
+      restricted_keys = {
+        ['h'] = { 'n', 'x' }, -- blocked
+        ['j'] = {}, -- allowed (vertical nav is ok)
+        ['k'] = {}, -- allowed (vertical nav is ok)
+        ['l'] = { 'n', 'x' }, -- blocked
+        ['w'] = { 'n', 'x' }, -- blocked (use f/t instead)
+        ['b'] = { 'n', 'x' }, -- blocked (use F/T instead)
+      },
+    },
+    keys = {
+      { '<leader>tH', '<cmd>Hardtime toggle<cr>', desc = 'Toggle Hardtime' },
+    },
+  },
+  {
+    'tris203/precognition.nvim',
+    opts = {
+      startVisible = true,
+      showBlankVirtLine = false,
+      highlightColor = { fg = '#1abc9c', bg = '#1f2335' }, -- teal fg + darker than cursorline
+    },
+    keys = {
+      {
+        '<leader>tp',
+        function()
+          require('precognition').toggle()
+        end,
+        desc = 'Toggle Precognition hints',
+      },
+    },
   },
 
   -------------------------------------------------------------------------------

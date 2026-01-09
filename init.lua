@@ -841,18 +841,11 @@ require('lazy').setup({
           end
 
           -- n-prat: telescope Go To Declaration etc REPLACED by snacks.picker
+          -- NOTE: Using vanilla Neovim 0.11+ keymaps: grn (rename), K (hover), [d/]d (diagnostics)
+          -- Snacks overrides: grr, gri, grt, gO, gra (see lua/custom/plugins/init.lua)
 
-          -- Rename the variable under your cursor.
-          --  Most Language Servers support renaming across files, etc.
-          map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-
-          -- Execute a code action, usually your cursor needs to be on top of an error
-          -- or a suggestion from your LSP for this to activate.
-          map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
-
-          -- WARN: This is not Goto Definition, this is Goto Declaration.
-          --  For example, in C this would take you to the header.
-          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+          -- Go to declaration (grd follows gr* pattern like grt)
+          map('grd', vim.lsp.buf.declaration, 'Goto Declaration')
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
