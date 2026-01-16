@@ -1056,18 +1056,6 @@ return {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
       'ravitemer/codecompanion-history.nvim',
-      -- installed with `uv tool install "vectorcode[lsp,mcp]<1.0.0"`
-      -- cf https://github.com/Davidyz/VectorCode/blob/main/docs/cli.md#installation
-      -- WARNING: when using `claude_code` ACP adapter, you can NOT use tools
-      -- In this case: `claude mcp add --scope user --transport stdio "vectorcode-mcp-server" vectorcode-mcp-server`
-      -- and Claude Code will be able to use vectorcode via MCP on its own
-      {
-        'Davidyz/VectorCode',
-        version = '*',
-        build = 'uv tool upgrade vectorcode', -- This helps keeping the CLI up-to-date
-        -- build = "pipx upgrade vectorcode", -- If you used pipx to install the CLI
-        dependencies = { 'nvim-lua/plenary.nvim' },
-      },
     },
     config = function()
       require('codecompanion').setup {
@@ -1200,46 +1188,6 @@ return {
             --   },
             -- },
           },
-          vectorcode = {
-            enabled = true,
-            opts = {
-              tool_group = {
-                -- this will register a tool group called `@vectorcode_toolbox` that contains all 3 tools
-                enabled = true,
-                -- a list of extra tools that you want to include in `@vectorcode_toolbox`.
-                -- if you use @vectorcode_vectorise, it'll be very handy to include
-                -- `file_search` here.
-                extras = {},
-                collapse = true, -- whether the individual tools should be shown in the chat
-              },
-              tool_opts = {
-                ---@type VectorCode.CodeCompanion.ToolOpts
-                ['*'] = { use_lsp = true },
-                ---@type VectorCode.CodeCompanion.LsToolOpts
-                ls = {},
-                ---@type VectorCode.CodeCompanion.VectoriseToolOpts
-                vectorise = {},
-                ---@type VectorCode.CodeCompanion.QueryToolOpts
-                query = {
-                  max_num = { chunk = -1, document = -1 },
-                  default_num = { chunk = 50, document = 10 },
-                  include_stderr = false,
-                  use_lsp = false,
-                  no_duplicate = true,
-                  chunk_mode = false,
-                  ---@type VectorCode.CodeCompanion.SummariseOpts
-                  summarise = {
-                    ---@type boolean|(fun(chat: CodeCompanion.Chat, results: VectorCode.QueryResult[]):boolean)|nil
-                    enabled = false,
-                    adapter = nil,
-                    query_augmented = true,
-                  },
-                },
-                files_ls = {},
-                files_rm = {},
-              },
-            },
-          },
         },
       }
 
@@ -1296,7 +1244,7 @@ return {
         '<c-.>',
         function()
           -- Check space before opening (only when opening, not closing)
-          local cli = require('sidekick.cli')
+          local cli = require 'sidekick.cli'
           if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' and _G.NvimLayout.LAYOUT then
             local can_open, reason = _G.NvimLayout.can_open_new_split(_G.NvimLayout.LAYOUT.min_sidekick)
             if not can_open then
@@ -1312,7 +1260,7 @@ return {
       {
         '<leader>aa',
         function()
-          local cli = require('sidekick.cli')
+          local cli = require 'sidekick.cli'
           if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' and _G.NvimLayout.LAYOUT then
             local can_open, reason = _G.NvimLayout.can_open_new_split(_G.NvimLayout.LAYOUT.min_sidekick)
             if not can_open then
@@ -1374,7 +1322,7 @@ return {
       {
         '<leader>ac',
         function()
-          local cli = require('sidekick.cli')
+          local cli = require 'sidekick.cli'
           if _G.NvimLayout and type(_G.NvimLayout.can_open_new_split) == 'function' and _G.NvimLayout.LAYOUT then
             local can_open, reason = _G.NvimLayout.can_open_new_split(_G.NvimLayout.LAYOUT.min_sidekick)
             if not can_open then
